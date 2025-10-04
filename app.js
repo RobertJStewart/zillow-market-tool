@@ -4,7 +4,7 @@ console.log('✅ Zillow Market Tool frontend loaded');
 async function loadData() {
     try {
         // Load the ZIP code data
-        const response = await fetch('./data_demo/zip_latest.geojson');
+        const response = await fetch('data_demo/zip_latest.geojson');
         const data = await response.json();
         
         console.log(`📊 Loaded ${data.features.length} ZIP codes`);
@@ -31,7 +31,8 @@ async function loadData() {
         
     } catch (error) {
         console.error('❌ Error loading data:', error);
-        document.getElementById('stats').innerHTML = '<p>❌ Error loading data. Make sure to run the pipeline first.</p>';
+        console.error('❌ Error details:', error.message);
+        document.getElementById('stats').innerHTML = `<p>❌ Error loading data: ${error.message}</p>`;
     }
 }
 
