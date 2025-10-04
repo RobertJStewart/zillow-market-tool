@@ -268,14 +268,22 @@ async function loadTimeSeriesData() {
 // Load state-level aggregated data
 async function loadStateLevelData() {
     try {
+        console.log('🔄 Loading ZIP code data for aggregation...');
         const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
         const data = await response.json();
+        
+        console.log(`📊 Loaded ${data.features.length} ZIP codes for aggregation`);
+        
+        // Take a sample of ZIP codes for performance (first 1000)
+        const sampleFeatures = data.features.slice(0, 1000);
         
         // Aggregate ZIP codes by state (simplified - using first 2 digits of ZIP as state proxy)
         const stateData = {};
         
-        data.features.forEach(feature => {
+        sampleFeatures.forEach(feature => {
             const zip = feature.properties.zcta;
+            if (!zip || zip.length < 2) return;
+            
             const stateCode = zip.substring(0, 2); // Simplified state grouping
             
             if (!stateData[stateCode]) {
@@ -283,7 +291,9 @@ async function loadStateLevelData() {
                     zips: [],
                     totalZhvi: 0,
                     totalZori: 0,
-                    count: 0
+                    count: 0,
+                    lats: [],
+                    lons: []
                 };
             }
             
@@ -291,27 +301,35 @@ async function loadStateLevelData() {
             stateData[stateCode].totalZhvi += feature.properties.zhvi || 0;
             stateData[stateCode].totalZori += feature.properties.zori || 0;
             stateData[stateCode].count++;
+            
+            // Collect coordinates for center calculation
+            if (feature.geometry && feature.geometry.coordinates) {
+                stateData[stateCode].lats.push(feature.geometry.coordinates[1]);
+                stateData[stateCode].lons.push(feature.geometry.coordinates[0]);
+            }
         });
+        
+        console.log(`📊 Aggregated into ${Object.keys(stateData).length} state regions`);
         
         // Create state-level features
         const stateFeatures = Object.entries(stateData).map(([stateCode, data]) => {
             const avgZhvi = data.totalZhvi / data.count;
             const avgZori = data.totalZori / data.count;
             
-            // Create a simple polygon for the state (centered on average location)
-            const avgLat = data.zips.reduce((sum, zip) => sum + (zip.geometry.coordinates[1] || 0), 0) / data.count;
-            const avgLon = data.zips.reduce((sum, zip) => sum + (zip.geometry.coordinates[0] || 0), 0) / data.count;
+            // Calculate center from actual coordinates
+            const avgLat = data.lats.length > 0 ? data.lats.reduce((sum, lat) => sum + lat, 0) / data.lats.length : 39.8283;
+            const avgLon = data.lons.length > 0 ? data.lons.reduce((sum, lon) => sum + lon, 0) / data.lons.length : -98.5795;
             
             return {
                 type: 'Feature',
                 geometry: {
                     type: 'Polygon',
                     coordinates: [[
-                        [avgLon - 2, avgLat - 1],
-                        [avgLon + 2, avgLat - 1],
-                        [avgLon + 2, avgLat + 1],
-                        [avgLon - 2, avgLat + 1],
-                        [avgLon - 2, avgLat - 1]
+                        [avgLon - 1, avgLat - 0.5],
+                        [avgLon + 1, avgLat - 0.5],
+                        [avgLon + 1, avgLat + 0.5],
+                        [avgLon - 1, avgLat + 0.5],
+                        [avgLon - 1, avgLat - 0.5]
                     ]]
                 },
                 properties: {
@@ -331,6 +349,8 @@ async function loadStateLevelData() {
             };
         });
         
+        console.log(`🎨 Created ${stateFeatures.length} state features`);
+        
         // Cache state data
         dataCache.states = {
             dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
@@ -339,8 +359,42 @@ async function loadStateLevelData() {
         
         timeSeriesData = dataCache.states;
         
+        console.log('✅ State-level data loaded successfully');
+        
     } catch (error) {
         console.error('❌ Error loading state data:', error);
+        // Create fallback data
+        timeSeriesData = {
+            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [-100, 35],
+                        [-90, 35],
+                        [-90, 45],
+                        [-100, 45],
+                        [-100, 35]
+                    ]]
+                },
+                properties: {
+                    stateCode: 'US',
+                    avgZhvi: 300000,
+                    avgZori: 2000,
+                    zipCount: 1000,
+                    timeValues: {
+                        '2024-01': { zhvi: 285000, zori: 1900 },
+                        '2024-02': { zhvi: 291000, zori: 1940 },
+                        '2024-03': { zhvi: 297000, zori: 1980 },
+                        '2024-04': { zhvi: 303000, zori: 2020 },
+                        '2024-05': { zhvi: 309000, zori: 2060 },
+                        '2024-06': { zhvi: 300000, zori: 2000 }
+                    }
+                }
+            }]
+        };
+        console.log('🔄 Using fallback data');
     }
 }
 
@@ -354,16 +408,12 @@ async function loadDetailedData() {
             const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
             const data = await response.json();
             
-            // Limit to visible area for performance
-            const bounds = map.getBounds();
-            const visibleFeatures = data.features.filter(feature => {
-                const coords = feature.geometry.coordinates;
-                return bounds.contains([coords[1], coords[0]]);
-            }).slice(0, 1000); // Limit to 1000 features max
+            // Take a much smaller sample for performance
+            const sampleFeatures = data.features.slice(0, 200); // Only 200 features max
             
             dataCache.zipcodes = {
                 dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-                features: visibleFeatures.map(feature => ({
+                features: sampleFeatures.map(feature => ({
                     ...feature,
                     timeValues: {
                         '2024-01': { zhvi: feature.properties.zhvi * 0.95, zori: (feature.properties.zori || 0) * 0.95 },
@@ -376,7 +426,7 @@ async function loadDetailedData() {
                 }))
             };
             
-            console.log(`✅ Loaded ${visibleFeatures.length} detailed features`);
+            console.log(`✅ Loaded ${sampleFeatures.length} detailed features`);
         } catch (error) {
             console.error('❌ Error loading detailed data:', error);
         }
