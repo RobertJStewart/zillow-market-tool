@@ -284,9 +284,13 @@ async function loadStateLevelData() {
         
         sampleFeatures.forEach(feature => {
             const zip = feature.properties.zcta;
-            if (!zip || zip.length < 2) return;
+            if (!zip) return;
             
-            const stateCode = zip.substring(0, 2); // Simplified state grouping
+            // Convert to string and get first 2 digits for state grouping
+            const zipStr = zip.toString();
+            if (zipStr.length < 2) return;
+            
+            const stateCode = zipStr.substring(0, 2); // Simplified state grouping
             
             if (!stateData[stateCode]) {
                 stateData[stateCode] = {
@@ -365,36 +369,65 @@ async function loadStateLevelData() {
         
     } catch (error) {
         console.error('❌ Error loading state data:', error);
-        // Create fallback data
+        // Create fallback data with multiple regions
         timeSeriesData = {
             dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-            features: [{
-                type: 'Feature',
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [[
-                        [-100, 35],
-                        [-90, 35],
-                        [-90, 45],
-                        [-100, 45],
-                        [-100, 35]
-                    ]]
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-100, 35],
+                            [-90, 35],
+                            [-90, 45],
+                            [-100, 45],
+                            [-100, 35]
+                        ]]
+                    },
+                    properties: {
+                        stateCode: 'US1',
+                        avgZhvi: 300000,
+                        avgZori: 2000,
+                        zipCount: 500,
+                        timeValues: {
+                            '2024-01': { zhvi: 285000, zori: 1900 },
+                            '2024-02': { zhvi: 291000, zori: 1940 },
+                            '2024-03': { zhvi: 297000, zori: 1980 },
+                            '2024-04': { zhvi: 303000, zori: 2020 },
+                            '2024-05': { zhvi: 309000, zori: 2060 },
+                            '2024-06': { zhvi: 300000, zori: 2000 }
+                        }
+                    }
                 },
-                properties: {
-                    stateCode: 'US',
-                    avgZhvi: 300000,
-                    avgZori: 2000,
-                    zipCount: 1000,
-                    timeValues: {
-                        '2024-01': { zhvi: 285000, zori: 1900 },
-                        '2024-02': { zhvi: 291000, zori: 1940 },
-                        '2024-03': { zhvi: 297000, zori: 1980 },
-                        '2024-04': { zhvi: 303000, zori: 2020 },
-                        '2024-05': { zhvi: 309000, zori: 2060 },
-                        '2024-06': { zhvi: 300000, zori: 2000 }
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-80, 25],
+                            [-70, 25],
+                            [-70, 35],
+                            [-80, 35],
+                            [-80, 25]
+                        ]]
+                    },
+                    properties: {
+                        stateCode: 'US2',
+                        avgZhvi: 450000,
+                        avgZori: 2500,
+                        zipCount: 300,
+                        timeValues: {
+                            '2024-01': { zhvi: 427500, zori: 2375 },
+                            '2024-02': { zhvi: 436500, zori: 2425 },
+                            '2024-03': { zhvi: 445500, zori: 2475 },
+                            '2024-04': { zhvi: 454500, zori: 2525 },
+                            '2024-05': { zhvi: 463500, zori: 2575 },
+                            '2024-06': { zhvi: 450000, zori: 2500 }
+                        }
                     }
                 }
-            }]
+            ]
         };
         console.log('🔄 Using fallback data');
     }
