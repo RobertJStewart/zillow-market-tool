@@ -5,7 +5,7 @@ async function loadData() {
     try {
         // Load the ZIP code data
         console.log('🔄 Attempting to fetch data...');
-        const response = await fetch('data_demo/zip_latest.geojson');
+        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
         console.log('📡 Response status:', response.status);
         console.log('📡 Response headers:', response.headers.get('content-type'));
         
