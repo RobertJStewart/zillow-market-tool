@@ -7,13 +7,24 @@ async function loadData() {
         console.log('🔄 Attempting to fetch data...');
         const response = await fetch('data_demo/zip_latest.geojson');
         console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers.get('content-type'));
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log('📊 Data loaded:', data);
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error(`Expected JSON but got: ${contentType}`);
+        }
+        
+        const text = await response.text();
+        console.log('📄 Response text length:', text.length);
+        console.log('📄 First 200 chars:', text.substring(0, 200));
+        
+        const data = JSON.parse(text);
+        console.log('📊 Data loaded successfully');
         console.log(`📊 Loaded ${data.features.length} ZIP codes`);
         
         // Extract and sort data by home value
