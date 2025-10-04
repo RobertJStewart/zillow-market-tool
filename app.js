@@ -310,8 +310,22 @@ async function loadStateLevelData() {
             
             // Collect coordinates for center calculation
             if (feature.geometry && feature.geometry.coordinates) {
-                stateData[stateCode].lats.push(feature.geometry.coordinates[1]);
-                stateData[stateCode].lons.push(feature.geometry.coordinates[0]);
+                // For Point geometry: coordinates are [lon, lat]
+                // For Polygon geometry: coordinates are [[[lon, lat], ...]]
+                let lat, lon;
+                if (feature.geometry.type === 'Point') {
+                    lon = feature.geometry.coordinates[0];
+                    lat = feature.geometry.coordinates[1];
+                } else if (feature.geometry.type === 'Polygon') {
+                    // Use first coordinate of the polygon
+                    lon = feature.geometry.coordinates[0][0][0];
+                    lat = feature.geometry.coordinates[0][0][1];
+                }
+                
+                if (lat && lon) {
+                    stateData[stateCode].lats.push(lat);
+                    stateData[stateCode].lons.push(lon);
+                }
             }
         });
         
