@@ -8,7 +8,42 @@ body {
 h2 {
     color: #333;
     text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Page Selector Navigation */
+.page-selector {
+    text-align: center;
     margin-bottom: 30px;
+}
+
+.page-btn {
+    background: #fff;
+    border: 2px solid #ddd;
+    padding: 12px 24px;
+    margin: 0 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.page-btn.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.page-content {
+    min-height: 400px;
 }
 
 .container {

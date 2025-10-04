@@ -9,7 +9,15 @@
 <body>
     <h2>Zillow Market Tool (Demo)</h2>
     
-    <div class="container">
+    <!-- Page Selector Navigation -->
+    <div class="page-selector">
+        <button class="page-btn active" data-page="overview">Overview</button>
+        <button class="page-btn" data-page="timeseries">Time Series</button>
+    </div>
+    
+    <!-- Overview Page -->
+    <div id="overview-page" class="page-content">
+        <div class="container">
         <div class="stats">
             <h3>📊 Data Summary</h3>
             <div id="stats"></div>
@@ -24,9 +32,18 @@
             <h3>🏠 Latest Market Data</h3>
             <div id="data-table"></div>
         </div>
+        </div>
     </div>
     
-            <script src="app.js?v=20250104"></script>
+    <!-- Time Series Page -->
+    <div id="timeseries-page" class="page-content" style="display: none;">
+        <div class="container">
+            <h3>📈 Time Series Analysis</h3>
+            <p>Time series content will be added here...</p>
+        </div>
+    </div>
+    
+    <script src="app.js?v=20250104"></script>
     
     <!-- Footer with data info -->
     <div id="footer-info" style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding: 10px; border-top: 1px solid #eee;">

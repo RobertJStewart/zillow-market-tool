@@ -164,5 +164,42 @@ function updateFooter(zipData) {
     }
 }
 
+// Page switching functionality
+function switchPage(pageName) {
+    // Hide all pages
+    document.querySelectorAll('.page-content').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected page
+    document.getElementById(pageName + '-page').style.display = 'block';
+    
+    // Add active class to clicked button
+    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+    
+    console.log(`📄 Switched to ${pageName} page`);
+}
+
+// Initialize page switching
+function initializePageSwitching() {
+    // Add click listeners to page buttons
+    document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pageName = this.getAttribute('data-page');
+            switchPage(pageName);
+        });
+    });
+    
+    console.log('✅ Page switching initialized');
+}
+
 // Load data when page loads
-document.addEventListener('DOMContentLoaded', loadData);
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    initializePageSwitching();
+});
