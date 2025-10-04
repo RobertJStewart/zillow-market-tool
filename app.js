@@ -206,6 +206,12 @@ let isPlaying = false;
 let playInterval = null;
 let drawnItems = null;
 let isDrawing = false;
+let currentZoomLevel = 4;
+let dataCache = {
+    states: null,
+    counties: null,
+    zipcodes: null
+};
 
 // Initialize map when Time Series page is shown
 function initializeMap() {
@@ -225,37 +231,28 @@ function initializeMap() {
     drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
     
+    // Add zoom level detection
+    map.on('zoomend', function() {
+        const newZoom = map.getZoom();
+        if (Math.abs(newZoom - currentZoomLevel) >= 1) {
+            currentZoomLevel = newZoom;
+            console.log(`🔍 Zoom level changed to: ${currentZoomLevel}`);
+            updateMapData(); // Reload data at appropriate detail level
+        }
+    });
+    
     console.log('✅ Map initialized');
 }
 
-// Load time series data
+// Load time series data with progressive detail
 async function loadTimeSeriesData() {
     try {
         console.log('📊 Loading time series data...');
         
-        // For now, we'll use the existing data and simulate time series
-        // In a real implementation, you'd load data with multiple time periods
-        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
-        const data = await response.json();
+        // Load initial state-level data (fast)
+        await loadStateLevelData();
         
-        // Simulate time series by creating multiple versions of the data
-        // with slightly different values for demonstration
-        timeSeriesData = {
-            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-            features: data.features.map(feature => ({
-                ...feature,
-                timeValues: {
-                    '2024-01': { zhvi: feature.properties.zhvi * 0.95, zori: (feature.properties.zori || 0) * 0.95 },
-                    '2024-02': { zhvi: feature.properties.zhvi * 0.97, zori: (feature.properties.zori || 0) * 0.97 },
-                    '2024-03': { zhvi: feature.properties.zhvi * 0.99, zori: (feature.properties.zori || 0) * 0.99 },
-                    '2024-04': { zhvi: feature.properties.zhvi * 1.01, zori: (feature.properties.zori || 0) * 1.01 },
-                    '2024-05': { zhvi: feature.properties.zhvi * 1.03, zori: (feature.properties.zori || 0) * 1.03 },
-                    '2024-06': { zhvi: feature.properties.zhvi, zori: feature.properties.zori || 0 }
-                }
-            }))
-        };
-        
-        console.log(`✅ Loaded time series data with ${timeSeriesData.dates.length} time periods`);
+        console.log(`✅ Loaded state-level data`);
         
         // Initialize time slider
         initializeTimeSlider();
@@ -265,6 +262,124 @@ async function loadTimeSeriesData() {
         
     } catch (error) {
         console.error('❌ Error loading time series data:', error);
+    }
+}
+
+// Load state-level aggregated data
+async function loadStateLevelData() {
+    try {
+        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
+        const data = await response.json();
+        
+        // Aggregate ZIP codes by state (simplified - using first 2 digits of ZIP as state proxy)
+        const stateData = {};
+        
+        data.features.forEach(feature => {
+            const zip = feature.properties.zcta;
+            const stateCode = zip.substring(0, 2); // Simplified state grouping
+            
+            if (!stateData[stateCode]) {
+                stateData[stateCode] = {
+                    zips: [],
+                    totalZhvi: 0,
+                    totalZori: 0,
+                    count: 0
+                };
+            }
+            
+            stateData[stateCode].zips.push(feature);
+            stateData[stateCode].totalZhvi += feature.properties.zhvi || 0;
+            stateData[stateCode].totalZori += feature.properties.zori || 0;
+            stateData[stateCode].count++;
+        });
+        
+        // Create state-level features
+        const stateFeatures = Object.entries(stateData).map(([stateCode, data]) => {
+            const avgZhvi = data.totalZhvi / data.count;
+            const avgZori = data.totalZori / data.count;
+            
+            // Create a simple polygon for the state (centered on average location)
+            const avgLat = data.zips.reduce((sum, zip) => sum + (zip.geometry.coordinates[1] || 0), 0) / data.count;
+            const avgLon = data.zips.reduce((sum, zip) => sum + (zip.geometry.coordinates[0] || 0), 0) / data.count;
+            
+            return {
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[
+                        [avgLon - 2, avgLat - 1],
+                        [avgLon + 2, avgLat - 1],
+                        [avgLon + 2, avgLat + 1],
+                        [avgLon - 2, avgLat + 1],
+                        [avgLon - 2, avgLat - 1]
+                    ]]
+                },
+                properties: {
+                    stateCode: stateCode,
+                    avgZhvi: avgZhvi,
+                    avgZori: avgZori,
+                    zipCount: data.count,
+                    timeValues: {
+                        '2024-01': { zhvi: avgZhvi * 0.95, zori: avgZori * 0.95 },
+                        '2024-02': { zhvi: avgZhvi * 0.97, zori: avgZori * 0.97 },
+                        '2024-03': { zhvi: avgZhvi * 0.99, zori: avgZori * 0.99 },
+                        '2024-04': { zhvi: avgZhvi * 1.01, zori: avgZori * 1.01 },
+                        '2024-05': { zhvi: avgZhvi * 1.03, zori: avgZori * 1.03 },
+                        '2024-06': { zhvi: avgZhvi, zori: avgZori }
+                    }
+                }
+            };
+        });
+        
+        // Cache state data
+        dataCache.states = {
+            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
+            features: stateFeatures
+        };
+        
+        timeSeriesData = dataCache.states;
+        
+    } catch (error) {
+        console.error('❌ Error loading state data:', error);
+    }
+}
+
+// Load detailed data based on zoom level
+async function loadDetailedData() {
+    const zoom = map.getZoom();
+    
+    if (zoom >= 8 && !dataCache.zipcodes) {
+        console.log('🔍 Loading detailed ZIP code data...');
+        try {
+            const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
+            const data = await response.json();
+            
+            // Limit to visible area for performance
+            const bounds = map.getBounds();
+            const visibleFeatures = data.features.filter(feature => {
+                const coords = feature.geometry.coordinates;
+                return bounds.contains([coords[1], coords[0]]);
+            }).slice(0, 1000); // Limit to 1000 features max
+            
+            dataCache.zipcodes = {
+                dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
+                features: visibleFeatures.map(feature => ({
+                    ...feature,
+                    timeValues: {
+                        '2024-01': { zhvi: feature.properties.zhvi * 0.95, zori: (feature.properties.zori || 0) * 0.95 },
+                        '2024-02': { zhvi: feature.properties.zhvi * 0.97, zori: (feature.properties.zori || 0) * 0.97 },
+                        '2024-03': { zhvi: feature.properties.zhvi * 0.99, zori: (feature.properties.zori || 0) * 0.99 },
+                        '2024-04': { zhvi: feature.properties.zhvi * 1.01, zori: (feature.properties.zori || 0) * 1.01 },
+                        '2024-05': { zhvi: feature.properties.zhvi * 1.03, zori: (feature.properties.zori || 0) * 1.03 },
+                        '2024-06': { zhvi: feature.properties.zhvi, zori: feature.properties.zori || 0 }
+                    }
+                }))
+            };
+            
+            console.log(`✅ Loaded ${visibleFeatures.length} detailed features`);
+        } catch (error) {
+            console.error('❌ Error loading detailed data:', error);
+        }
     }
 }
 
@@ -289,7 +404,7 @@ function initializeTimeSlider() {
 }
 
 // Update map data based on current time and settings
-function updateMapData() {
+async function updateMapData() {
     if (!map || !timeSeriesData) return;
     
     const slider = document.getElementById('time-slider');
@@ -301,18 +416,30 @@ function updateMapData() {
     const timeIndex = parseInt(slider.value);
     const currentDate = timeSeriesData.dates[timeIndex];
     
-    console.log(`📅 Updating map for ${currentDate}, ${dataType}, ${overlayType}`);
+    console.log(`📅 Updating map for ${currentDate}, ${dataType}, ${overlayType}, zoom: ${currentZoomLevel}`);
+    
+    // Load detailed data if needed
+    await loadDetailedData();
+    
+    // Choose appropriate data source based on zoom level
+    let dataSource = timeSeriesData;
+    if (currentZoomLevel >= 8 && dataCache.zipcodes) {
+        dataSource = dataCache.zipcodes;
+        console.log('🔍 Using detailed ZIP code data');
+    } else {
+        console.log('🗺️ Using state-level data');
+    }
     
     // Clear existing layer
     if (currentLayer) {
         map.removeLayer(currentLayer);
     }
     
-    // Create new layer based on overlay type
+    // Create new layer based on overlay type and zoom level
     if (overlayType === 'zip') {
-        currentLayer = createZipLayer(currentDate, dataType);
+        currentLayer = createZipLayer(currentDate, dataType, dataSource);
     } else {
-        currentLayer = createH3Layer(currentDate, dataType);
+        currentLayer = createH3Layer(currentDate, dataType, dataSource);
     }
     
     if (currentLayer) {
@@ -324,23 +451,27 @@ function updateMapData() {
 }
 
 // Create ZIP code layer
-function createZipLayer(date, dataType) {
-    const features = timeSeriesData.features
+function createZipLayer(date, dataType, dataSource = timeSeriesData) {
+    const features = dataSource.features
         .map(feature => {
-            const timeData = feature.timeValues[date];
+            const timeData = feature.timeValues?.[date];
             if (!timeData) return null;
             
             return {
                 type: 'Feature',
                 geometry: feature.geometry,
                 properties: {
-                    zcta: feature.properties.zcta,
+                    id: feature.properties.zcta || feature.properties.stateCode,
                     value: timeData[dataType] || 0,
-                    date: date
+                    date: date,
+                    zipCount: feature.properties.zipCount || 1,
+                    isState: !!feature.properties.stateCode
                 }
             };
         })
         .filter(f => f !== null);
+    
+    console.log(`🎨 Rendering ${features.length} features`);
     
     return L.geoJSON(features, {
         style: function(feature) {
@@ -349,54 +480,51 @@ function createZipLayer(date, dataType) {
             
             return {
                 fillColor: color,
-                weight: 1,
+                weight: feature.properties.isState ? 2 : 1,
                 opacity: 1,
                 color: 'white',
-                dashArray: '3',
+                dashArray: feature.properties.isState ? '5' : '3',
                 fillOpacity: 0.7
             };
         },
         onEachFeature: function(feature, layer) {
             const props = feature.properties;
+            const label = props.isState ? `State Region: ${props.id}` : `ZIP: ${props.id}`;
+            const countInfo = props.zipCount > 1 ? `<br>ZIP Codes: ${props.zipCount}` : '';
+            
             layer.bindPopup(`
-                <strong>ZIP: ${props.zcta}</strong><br>
+                <strong>${label}</strong><br>
                 ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
-                Date: ${props.date}
+                Date: ${props.date}${countInfo}
             `);
         }
     });
 }
 
 // Create H3 layer
-function createH3Layer(date, dataType) {
+function createH3Layer(date, dataType, dataSource = timeSeriesData) {
     try {
-        // Load H3 grid data
-        const h3Data = window.h3GridData; // We'll load this separately
-        
-        if (!h3Data) {
-            console.log('H3 data not loaded yet, loading...');
-            loadH3Data().then(() => {
-                updateMapData(); // Retry after loading
-            });
-            return null;
-        }
-        
-        const features = h3Data.features
+        // For now, use the same data source as ZIP codes
+        // In a real implementation, you'd have separate H3 data
+        const features = dataSource.features
             .map(feature => {
-                const timeData = feature.properties.timeValues?.[date];
+                const timeData = feature.timeValues?.[date];
                 if (!timeData) return null;
                 
                 return {
                     type: 'Feature',
                     geometry: feature.geometry,
                     properties: {
-                        hexId: feature.properties.hexId,
+                        id: feature.properties.zcta || feature.properties.stateCode || 'hex',
                         value: timeData[dataType] || 0,
-                        date: date
+                        date: date,
+                        isState: !!feature.properties.stateCode
                     }
                 };
             })
             .filter(f => f !== null);
+        
+        console.log(`🔷 Rendering ${features.length} H3 features`);
         
         return L.geoJSON(features, {
             style: function(feature) {
@@ -413,8 +541,10 @@ function createH3Layer(date, dataType) {
             },
             onEachFeature: function(feature, layer) {
                 const props = feature.properties;
+                const label = props.isState ? `State Region: ${props.id}` : `H3 Hex: ${props.id}`;
+                
                 layer.bindPopup(`
-                    <strong>H3 Hex: ${props.hexId}</strong><br>
+                    <strong>${label}</strong><br>
                     ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
                     Date: ${props.date}
                 `);
