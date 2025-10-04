@@ -1,0 +1,67 @@
+﻿2025-10-04T04:45:27.7569328Z ##[group]Run pip install -r requirements.txt
+2025-10-04T04:45:27.7570122Z [36;1mpip install -r requirements.txt[0m
+2025-10-04T04:45:27.7883767Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:27.7884529Z env:
+2025-10-04T04:45:27.7885066Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7885972Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:27.7886864Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7887676Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7888485Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7889289Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:27.7889973Z ##[endgroup]
+2025-10-04T04:45:34.1469473Z Collecting duckdb==1.1.1 (from -r requirements.txt (line 1))
+2025-10-04T04:45:34.1867706Z   Downloading duckdb-1.1.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (762 bytes)
+2025-10-04T04:45:34.2048320Z Collecting geopandas==1.0.1 (from -r requirements.txt (line 2))
+2025-10-04T04:45:34.2089870Z   Downloading geopandas-1.0.1-py3-none-any.whl.metadata (2.2 kB)
+2025-10-04T04:45:34.3107048Z Collecting shapely==2.0.4 (from -r requirements.txt (line 3))
+2025-10-04T04:45:34.3152367Z   Downloading shapely-2.0.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.0 kB)
+2025-10-04T04:45:34.3923127Z Collecting h3==3.7.7 (from -r requirements.txt (line 4))
+2025-10-04T04:45:34.3971013Z   Downloading h3-3.7.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2025-10-04T04:45:34.5315990Z Collecting pandas==2.2.2 (from -r requirements.txt (line 5))
+2025-10-04T04:45:34.5362548Z   Downloading pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (19 kB)
+2025-10-04T04:45:34.6723199Z Collecting pyarrow==16.1.0 (from -r requirements.txt (line 6))
+2025-10-04T04:45:34.6783355Z   Downloading pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+2025-10-04T04:45:34.8902064Z Collecting numpy>=1.22 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.8942210Z   Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (62 kB)
+2025-10-04T04:45:34.9447093Z Collecting pyogrio>=0.7.2 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.9495208Z   Downloading pyogrio-0.11.1-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2025-10-04T04:45:34.9689515Z Collecting packaging (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.9722466Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+2025-10-04T04:45:35.0566087Z Collecting pyproj>=3.3.0 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:35.0614389Z   Downloading pyproj-3.7.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (31 kB)
+2025-10-04T04:45:35.1149271Z Collecting python-dateutil>=2.8.2 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1182439Z   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2025-10-04T04:45:35.1667323Z Collecting pytz>=2020.1 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1705598Z   Downloading pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+2025-10-04T04:45:35.1883904Z Collecting tzdata>=2022.7 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1919530Z   Downloading tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2025-10-04T04:45:35.2306589Z Collecting certifi (from pyogrio>=0.7.2->geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:35.2340070Z   Downloading certifi-2025.8.3-py3-none-any.whl.metadata (2.4 kB)
+2025-10-04T04:45:35.2505072Z Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.2552021Z   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2025-10-04T04:45:35.2666360Z Downloading duckdb-1.1.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20.1 MB)
+2025-10-04T04:45:36.2163603Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.1/20.1 MB 21.1 MB/s  0:00:00
+2025-10-04T04:45:36.2214402Z Downloading geopandas-1.0.1-py3-none-any.whl (323 kB)
+2025-10-04T04:45:36.2300351Z Downloading shapely-2.0.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.5 MB)
+2025-10-04T04:45:36.2491312Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.5/2.5 MB 152.1 MB/s  0:00:00
+2025-10-04T04:45:36.2539760Z Downloading h3-3.7.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+2025-10-04T04:45:36.2679814Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 130.1 MB/s  0:00:00
+2025-10-04T04:45:36.2744439Z Downloading pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.0 MB)
+2025-10-04T04:45:36.4976388Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.0/13.0 MB 58.0 MB/s  0:00:00
+2025-10-04T04:45:36.5029992Z Downloading pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl (40.8 MB)
+2025-10-04T04:45:36.8132845Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.8/40.8 MB 131.7 MB/s  0:00:00
+2025-10-04T04:45:36.8173068Z Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+2025-10-04T04:45:36.9029837Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 200.8 MB/s  0:00:00
+2025-10-04T04:45:36.9086641Z Downloading pyogrio-0.11.1-cp310-cp310-manylinux_2_28_x86_64.whl (27.5 MB)
+2025-10-04T04:45:37.2450413Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 27.5/27.5 MB 81.8 MB/s  0:00:00
+2025-10-04T04:45:37.2490335Z Downloading pyproj-3.7.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (9.3 MB)
+2025-10-04T04:45:37.2995560Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.3/9.3 MB 190.0 MB/s  0:00:00
+2025-10-04T04:45:37.3030083Z Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2025-10-04T04:45:37.3093043Z Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
+2025-10-04T04:45:37.3170155Z Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2025-10-04T04:45:37.3224992Z Downloading tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+2025-10-04T04:45:37.3297602Z Downloading certifi-2025.8.3-py3-none-any.whl (161 kB)
+2025-10-04T04:45:37.3361399Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+2025-10-04T04:45:37.6598738Z Installing collected packages: pytz, h3, tzdata, six, packaging, numpy, duckdb, certifi, shapely, python-dateutil, pyproj, pyogrio, pyarrow, pandas, geopandas
+2025-10-04T04:45:46.1040506Z 
+2025-10-04T04:45:46.1073720Z Successfully installed certifi-2025.8.3 duckdb-1.1.1 geopandas-1.0.1 h3-3.7.7 numpy-2.2.6 packaging-25.0 pandas-2.2.2 pyarrow-16.1.0 pyogrio-0.11.1 pyproj-3.7.1 python-dateutil-2.9.0.post0 pytz-2025.2 shapely-2.0.4 six-1.17.0 tzdata-2025.2

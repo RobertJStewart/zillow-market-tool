@@ -1,0 +1,276 @@
+﻿2025-10-04T04:45:25.3031184Z Current runner version: '2.328.0'
+2025-10-04T04:45:25.3056753Z ##[group]Runner Image Provisioner
+2025-10-04T04:45:25.3057705Z Hosted Compute Agent
+2025-10-04T04:45:25.3058251Z Version: 20250912.392
+2025-10-04T04:45:25.3058813Z Commit: d921fda672a98b64f4f82364647e2f10b2267d0b
+2025-10-04T04:45:25.3059544Z Build Date: 2025-09-12T15:23:14Z
+2025-10-04T04:45:25.3060150Z ##[endgroup]
+2025-10-04T04:45:25.3060674Z ##[group]Operating System
+2025-10-04T04:45:25.3061281Z Ubuntu
+2025-10-04T04:45:25.3061721Z 24.04.3
+2025-10-04T04:45:25.3062178Z LTS
+2025-10-04T04:45:25.3062616Z ##[endgroup]
+2025-10-04T04:45:25.3063112Z ##[group]Runner Image
+2025-10-04T04:45:25.3063650Z Image: ubuntu-24.04
+2025-10-04T04:45:25.3064389Z Version: 20250929.60.1
+2025-10-04T04:45:25.3065431Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250929.60/images/ubuntu/Ubuntu2404-Readme.md
+2025-10-04T04:45:25.3066899Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250929.60
+2025-10-04T04:45:25.3067912Z ##[endgroup]
+2025-10-04T04:45:25.3068980Z ##[group]GITHUB_TOKEN Permissions
+2025-10-04T04:45:25.3070872Z Contents: read
+2025-10-04T04:45:25.3071412Z Metadata: read
+2025-10-04T04:45:25.3071855Z Packages: read
+2025-10-04T04:45:25.3072593Z ##[endgroup]
+2025-10-04T04:45:25.3075161Z Secret source: Actions
+2025-10-04T04:45:25.3076105Z Prepare workflow directory
+2025-10-04T04:45:25.3397153Z Prepare all required actions
+2025-10-04T04:45:25.3434989Z Getting action download info
+2025-10-04T04:45:25.7949053Z Download action repository 'actions/checkout@v3' (SHA:f43a0e5ff2bd294095638e18286ca9a3d1956744)
+2025-10-04T04:45:26.0355677Z Download action repository 'actions/setup-python@v4' (SHA:7f4fc3e22c37d6ff65e88745f38bd3157c663f7c)
+2025-10-04T04:45:26.2667878Z Download action repository 'peaceiris/actions-gh-pages@v3' (SHA:373f7f263a76c20808c831209c920827a82a2847)
+2025-10-04T04:45:26.8881242Z Complete job name: build
+2025-10-04T04:45:26.9577063Z ##[group]Run actions/checkout@v3
+2025-10-04T04:45:26.9577974Z with:
+2025-10-04T04:45:26.9578494Z   repository: RobertJStewart/zillow-market-tool
+2025-10-04T04:45:26.9579282Z   token: ***
+2025-10-04T04:45:26.9579699Z   ssh-strict: true
+2025-10-04T04:45:26.9580160Z   persist-credentials: true
+2025-10-04T04:45:26.9580631Z   clean: true
+2025-10-04T04:45:26.9581076Z   sparse-checkout-cone-mode: true
+2025-10-04T04:45:26.9581595Z   fetch-depth: 1
+2025-10-04T04:45:26.9582023Z   fetch-tags: false
+2025-10-04T04:45:26.9582445Z   lfs: false
+2025-10-04T04:45:26.9582835Z   submodules: false
+2025-10-04T04:45:26.9583273Z   set-safe-directory: true
+2025-10-04T04:45:26.9583991Z ##[endgroup]
+2025-10-04T04:45:27.0422730Z Syncing repository: RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.0425015Z ##[group]Getting Git version info
+2025-10-04T04:45:27.0425871Z Working directory is '/home/runner/work/zillow-market-tool/zillow-market-tool'
+2025-10-04T04:45:27.0427064Z [command]/usr/bin/git version
+2025-10-04T04:45:27.0488275Z git version 2.51.0
+2025-10-04T04:45:27.0514176Z ##[endgroup]
+2025-10-04T04:45:27.0528675Z Temporarily overriding HOME='/home/runner/work/_temp/b41d4552-8f02-47f6-ad8e-f356839891fe' before making global git config changes
+2025-10-04T04:45:27.0531841Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-04T04:45:27.0533286Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:27.0567470Z Deleting the contents of '/home/runner/work/zillow-market-tool/zillow-market-tool'
+2025-10-04T04:45:27.0570800Z ##[group]Initializing the repository
+2025-10-04T04:45:27.0573657Z [command]/usr/bin/git init /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:27.0668728Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-10-04T04:45:27.0670064Z hint: is subject to change. To configure the initial branch name to use in all
+2025-10-04T04:45:27.0671168Z hint: of your new repositories, which will suppress this warning, call:
+2025-10-04T04:45:27.0672506Z hint:
+2025-10-04T04:45:27.0673365Z hint: 	git config --global init.defaultBranch <name>
+2025-10-04T04:45:27.0674096Z hint:
+2025-10-04T04:45:27.0674878Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-10-04T04:45:27.0676131Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-10-04T04:45:27.0676990Z hint:
+2025-10-04T04:45:27.0677429Z hint: 	git branch -m <name>
+2025-10-04T04:45:27.0678055Z hint:
+2025-10-04T04:45:27.0678874Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-10-04T04:45:27.0680224Z Initialized empty Git repository in /home/runner/work/zillow-market-tool/zillow-market-tool/.git/
+2025-10-04T04:45:27.0682570Z [command]/usr/bin/git remote add origin https://github.com/RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.0717169Z ##[endgroup]
+2025-10-04T04:45:27.0720110Z ##[group]Disabling automatic garbage collection
+2025-10-04T04:45:27.0720787Z [command]/usr/bin/git config --local gc.auto 0
+2025-10-04T04:45:27.0745938Z ##[endgroup]
+2025-10-04T04:45:27.0746644Z ##[group]Setting up auth
+2025-10-04T04:45:27.0750995Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-04T04:45:27.0777731Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-04T04:45:27.1095563Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-04T04:45:27.1121191Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-04T04:45:27.1337734Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-10-04T04:45:27.1369250Z ##[endgroup]
+2025-10-04T04:45:27.1370140Z ##[group]Fetching the repository
+2025-10-04T04:45:27.1377835Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +671337c1583f530353ab0eeff41186194800ebb5:refs/remotes/origin/main
+2025-10-04T04:45:27.4610387Z remote: Enumerating objects: 21, done.        
+2025-10-04T04:45:27.4611929Z remote: Counting objects:   4% (1/21)        
+2025-10-04T04:45:27.4613277Z remote: Counting objects:   9% (2/21)        
+2025-10-04T04:45:27.4614433Z remote: Counting objects:  14% (3/21)        
+2025-10-04T04:45:27.4615599Z remote: Counting objects:  19% (4/21)        
+2025-10-04T04:45:27.4616692Z remote: Counting objects:  23% (5/21)        
+2025-10-04T04:45:27.4617444Z remote: Counting objects:  28% (6/21)        
+2025-10-04T04:45:27.4618169Z remote: Counting objects:  33% (7/21)        
+2025-10-04T04:45:27.4618899Z remote: Counting objects:  38% (8/21)        
+2025-10-04T04:45:27.4619626Z remote: Counting objects:  42% (9/21)        
+2025-10-04T04:45:27.4620319Z remote: Counting objects:  47% (10/21)        
+2025-10-04T04:45:27.4621402Z remote: Counting objects:  52% (11/21)        
+2025-10-04T04:45:27.4622395Z remote: Counting objects:  57% (12/21)        
+2025-10-04T04:45:27.4623357Z remote: Counting objects:  61% (13/21)        
+2025-10-04T04:45:27.4624521Z remote: Counting objects:  66% (14/21)        
+2025-10-04T04:45:27.4625523Z remote: Counting objects:  71% (15/21)        
+2025-10-04T04:45:27.4626502Z remote: Counting objects:  76% (16/21)        
+2025-10-04T04:45:27.4627482Z remote: Counting objects:  80% (17/21)        
+2025-10-04T04:45:27.4628456Z remote: Counting objects:  85% (18/21)        
+2025-10-04T04:45:27.4629498Z remote: Counting objects:  90% (19/21)        
+2025-10-04T04:45:27.4630490Z remote: Counting objects:  95% (20/21)        
+2025-10-04T04:45:27.4631467Z remote: Counting objects: 100% (21/21)        
+2025-10-04T04:45:27.4632520Z remote: Counting objects: 100% (21/21), done.        
+2025-10-04T04:45:27.4633870Z remote: Compressing objects:   5% (1/18)        
+2025-10-04T04:45:27.4635477Z remote: Compressing objects:  11% (2/18)        
+2025-10-04T04:45:27.4636527Z remote: Compressing objects:  16% (3/18)        
+2025-10-04T04:45:27.4637738Z remote: Compressing objects:  22% (4/18)        
+2025-10-04T04:45:27.4638789Z remote: Compressing objects:  27% (5/18)        
+2025-10-04T04:45:27.4639811Z remote: Compressing objects:  33% (6/18)        
+2025-10-04T04:45:27.4640878Z remote: Compressing objects:  38% (7/18)        
+2025-10-04T04:45:27.4641930Z remote: Compressing objects:  44% (8/18)        
+2025-10-04T04:45:27.4642983Z remote: Compressing objects:  50% (9/18)        
+2025-10-04T04:45:27.4644008Z remote: Compressing objects:  55% (10/18)        
+2025-10-04T04:45:27.4645280Z remote: Compressing objects:  61% (11/18)        
+2025-10-04T04:45:27.4646319Z remote: Compressing objects:  66% (12/18)        
+2025-10-04T04:45:27.4647380Z remote: Compressing objects:  72% (13/18)        
+2025-10-04T04:45:27.4648395Z remote: Compressing objects:  77% (14/18)        
+2025-10-04T04:45:27.4649455Z remote: Compressing objects:  83% (15/18)        
+2025-10-04T04:45:27.4650512Z remote: Compressing objects:  88% (16/18)        
+2025-10-04T04:45:27.4651553Z remote: Compressing objects:  94% (17/18)        
+2025-10-04T04:45:27.4652692Z remote: Compressing objects: 100% (18/18)        
+2025-10-04T04:45:27.4653806Z remote: Compressing objects: 100% (18/18), done.        
+2025-10-04T04:45:27.4655287Z remote: Total 21 (delta 0), reused 15 (delta 0), pack-reused 0 (from 0)        
+2025-10-04T04:45:27.4718064Z From https://github.com/RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.4719040Z  * [new ref]         671337c1583f530353ab0eeff41186194800ebb5 -> origin/main
+2025-10-04T04:45:27.4752236Z ##[endgroup]
+2025-10-04T04:45:27.4753032Z ##[group]Determining the checkout info
+2025-10-04T04:45:27.4754402Z ##[endgroup]
+2025-10-04T04:45:27.4755248Z ##[group]Checking out the ref
+2025-10-04T04:45:27.4758404Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-10-04T04:45:27.4809694Z Switched to a new branch 'main'
+2025-10-04T04:45:27.4812715Z branch 'main' set up to track 'origin/main'.
+2025-10-04T04:45:27.4818640Z ##[endgroup]
+2025-10-04T04:45:27.4849610Z [command]/usr/bin/git log -1 --format='%H'
+2025-10-04T04:45:27.4870600Z '671337c1583f530353ab0eeff41186194800ebb5'
+2025-10-04T04:45:27.5101093Z ##[group]Run actions/setup-python@v4
+2025-10-04T04:45:27.5101749Z with:
+2025-10-04T04:45:27.5102386Z   python-version: 3.10
+2025-10-04T04:45:27.5102848Z   check-latest: false
+2025-10-04T04:45:27.5103443Z   token: ***
+2025-10-04T04:45:27.5103859Z   update-environment: true
+2025-10-04T04:45:27.5104603Z   allow-prereleases: false
+2025-10-04T04:45:27.5105081Z ##[endgroup]
+2025-10-04T04:45:27.6846294Z ##[group]Installed versions
+2025-10-04T04:45:27.7443005Z Successfully set up CPython (3.10.18)
+2025-10-04T04:45:27.7444606Z ##[endgroup]
+2025-10-04T04:45:27.7569349Z ##[group]Run pip install -r requirements.txt
+2025-10-04T04:45:27.7570127Z [36;1mpip install -r requirements.txt[0m
+2025-10-04T04:45:27.7883790Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:27.7884535Z env:
+2025-10-04T04:45:27.7885070Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7885976Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:27.7886867Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7887680Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7888489Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:27.7889292Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:27.7889977Z ##[endgroup]
+2025-10-04T04:45:34.1469564Z Collecting duckdb==1.1.1 (from -r requirements.txt (line 1))
+2025-10-04T04:45:34.1867840Z   Downloading duckdb-1.1.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (762 bytes)
+2025-10-04T04:45:34.2048347Z Collecting geopandas==1.0.1 (from -r requirements.txt (line 2))
+2025-10-04T04:45:34.2089892Z   Downloading geopandas-1.0.1-py3-none-any.whl.metadata (2.2 kB)
+2025-10-04T04:45:34.3107178Z Collecting shapely==2.0.4 (from -r requirements.txt (line 3))
+2025-10-04T04:45:34.3152391Z   Downloading shapely-2.0.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.0 kB)
+2025-10-04T04:45:34.3923206Z Collecting h3==3.7.7 (from -r requirements.txt (line 4))
+2025-10-04T04:45:34.3971191Z   Downloading h3-3.7.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2025-10-04T04:45:34.5316063Z Collecting pandas==2.2.2 (from -r requirements.txt (line 5))
+2025-10-04T04:45:34.5362591Z   Downloading pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (19 kB)
+2025-10-04T04:45:34.6723252Z Collecting pyarrow==16.1.0 (from -r requirements.txt (line 6))
+2025-10-04T04:45:34.6783437Z   Downloading pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+2025-10-04T04:45:34.8902126Z Collecting numpy>=1.22 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.8942246Z   Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (62 kB)
+2025-10-04T04:45:34.9447142Z Collecting pyogrio>=0.7.2 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.9495230Z   Downloading pyogrio-0.11.1-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2025-10-04T04:45:34.9689542Z Collecting packaging (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:34.9722496Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+2025-10-04T04:45:35.0566122Z Collecting pyproj>=3.3.0 (from geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:35.0614417Z   Downloading pyproj-3.7.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (31 kB)
+2025-10-04T04:45:35.1149353Z Collecting python-dateutil>=2.8.2 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1182451Z   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2025-10-04T04:45:35.1667370Z Collecting pytz>=2020.1 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1705617Z   Downloading pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+2025-10-04T04:45:35.1883937Z Collecting tzdata>=2022.7 (from pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.1919553Z   Downloading tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2025-10-04T04:45:35.2306625Z Collecting certifi (from pyogrio>=0.7.2->geopandas==1.0.1->-r requirements.txt (line 2))
+2025-10-04T04:45:35.2340081Z   Downloading certifi-2025.8.3-py3-none-any.whl.metadata (2.4 kB)
+2025-10-04T04:45:35.2505095Z Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas==2.2.2->-r requirements.txt (line 5))
+2025-10-04T04:45:35.2552032Z   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2025-10-04T04:45:35.2666806Z Downloading duckdb-1.1.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20.1 MB)
+2025-10-04T04:45:36.2163655Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.1/20.1 MB 21.1 MB/s  0:00:00
+2025-10-04T04:45:36.2214434Z Downloading geopandas-1.0.1-py3-none-any.whl (323 kB)
+2025-10-04T04:45:36.2300378Z Downloading shapely-2.0.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.5 MB)
+2025-10-04T04:45:36.2491341Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.5/2.5 MB 152.1 MB/s  0:00:00
+2025-10-04T04:45:36.2539778Z Downloading h3-3.7.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+2025-10-04T04:45:36.2679837Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 130.1 MB/s  0:00:00
+2025-10-04T04:45:36.2744454Z Downloading pandas-2.2.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.0 MB)
+2025-10-04T04:45:36.4976425Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.0/13.0 MB 58.0 MB/s  0:00:00
+2025-10-04T04:45:36.5030054Z Downloading pyarrow-16.1.0-cp310-cp310-manylinux_2_28_x86_64.whl (40.8 MB)
+2025-10-04T04:45:36.8132895Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.8/40.8 MB 131.7 MB/s  0:00:00
+2025-10-04T04:45:36.8173080Z Downloading numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+2025-10-04T04:45:36.9029882Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 200.8 MB/s  0:00:00
+2025-10-04T04:45:36.9086671Z Downloading pyogrio-0.11.1-cp310-cp310-manylinux_2_28_x86_64.whl (27.5 MB)
+2025-10-04T04:45:37.2450452Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 27.5/27.5 MB 81.8 MB/s  0:00:00
+2025-10-04T04:45:37.2490346Z Downloading pyproj-3.7.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (9.3 MB)
+2025-10-04T04:45:37.2995597Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.3/9.3 MB 190.0 MB/s  0:00:00
+2025-10-04T04:45:37.3030092Z Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2025-10-04T04:45:37.3093056Z Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
+2025-10-04T04:45:37.3170335Z Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2025-10-04T04:45:37.3225006Z Downloading tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+2025-10-04T04:45:37.3297617Z Downloading certifi-2025.8.3-py3-none-any.whl (161 kB)
+2025-10-04T04:45:37.3361414Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+2025-10-04T04:45:37.6598778Z Installing collected packages: pytz, h3, tzdata, six, packaging, numpy, duckdb, certifi, shapely, python-dateutil, pyproj, pyogrio, pyarrow, pandas, geopandas
+2025-10-04T04:45:46.1040554Z 
+2025-10-04T04:45:46.1073731Z Successfully installed certifi-2025.8.3 duckdb-1.1.1 geopandas-1.0.1 h3-3.7.7 numpy-2.2.6 packaging-25.0 pandas-2.2.2 pyarrow-16.1.0 pyogrio-0.11.1 pyproj-3.7.1 python-dateutil-2.9.0.post0 pytz-2025.2 shapely-2.0.4 six-1.17.0 tzdata-2025.2
+2025-10-04T04:45:46.3613960Z ##[group]Run mkdir -p data_raw
+2025-10-04T04:45:46.3614535Z [36;1mmkdir -p data_raw[0m
+2025-10-04T04:45:46.3615401Z [36;1mcurl -o data_raw/zhvi.csv https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv[0m
+2025-10-04T04:45:46.3616333Z [36;1mcurl -o data_raw/zori.csv https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_sa_month.csv[0m
+2025-10-04T04:45:46.3651850Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:46.3652070Z env:
+2025-10-04T04:45:46.3652309Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3652702Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:46.3653097Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3653431Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3653768Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3654161Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:46.3654579Z ##[endgroup]
+2025-10-04T04:45:46.3789307Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2025-10-04T04:45:46.3790076Z                                  Dload  Upload   Total   Spent    Left  Speed
+2025-10-04T04:45:46.3790390Z 
+2025-10-04T04:45:46.8302780Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2025-10-04T04:45:47.5940094Z   0  112M    0 32312    0     0  71572      0  0:27:25 --:--:--  0:27:25 71486
+2025-10-04T04:45:48.1302921Z  69  112M   69 78.0M    0     0  64.1M      0  0:00:01  0:00:01 --:--:-- 64.1M
+2025-10-04T04:45:48.1303614Z 100  112M  100  112M    0     0  64.1M      0  0:00:01  0:00:01 --:--:-- 64.1M
+2025-10-04T04:45:48.1385306Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2025-10-04T04:45:48.1385999Z                                  Dload  Upload   Total   Spent    Left  Speed
+2025-10-04T04:45:48.1386353Z 
+2025-10-04T04:45:48.5938059Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2025-10-04T04:45:48.6187523Z  86 8353k   86 7233k    0     0  15.5M      0 --:--:-- --:--:-- --:--:-- 15.4M
+2025-10-04T04:45:48.6188150Z 100 8353k  100 8353k    0     0  16.9M      0 --:--:-- --:--:-- --:--:-- 16.9M
+2025-10-04T04:45:48.6240645Z ##[group]Run python ingest/zillow_ingest.py
+2025-10-04T04:45:48.6241153Z [36;1mpython ingest/zillow_ingest.py[0m
+2025-10-04T04:45:48.6241417Z [36;1mpython transform/run_sql.py[0m
+2025-10-04T04:45:48.6241680Z [36;1mpython transform/export_zip_geojson.py[0m
+2025-10-04T04:45:48.6241965Z [36;1mpython transform/project_to_h3.py[0m
+2025-10-04T04:45:48.6274872Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:48.6275095Z env:
+2025-10-04T04:45:48.6275327Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6275722Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:48.6276100Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6276437Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6276767Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6277122Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:48.6277445Z ##[endgroup]
+2025-10-04T04:45:51.2501057Z ✅ Zillow CSVs loaded into DuckDB
+2025-10-04T04:45:51.4896192Z Traceback (most recent call last):
+2025-10-04T04:45:51.4903082Z   File "/home/runner/work/zillow-market-tool/zillow-market-tool/transform/run_sql.py", line 8, in <module>
+2025-10-04T04:45:51.4903783Z     con.execute(sql)
+2025-10-04T04:45:51.4904427Z duckdb.duckdb.ParserException: Parser Error: syntax error at or near "CREATE"
+2025-10-04T04:45:51.4995631Z ##[error]Process completed with exit code 1.
+2025-10-04T04:45:51.5082881Z Post job cleanup.
+2025-10-04T04:45:51.5794743Z [command]/usr/bin/git version
+2025-10-04T04:45:51.5829413Z git version 2.51.0
+2025-10-04T04:45:51.5871473Z Temporarily overriding HOME='/home/runner/work/_temp/531a2dcd-509d-4372-a6ed-65ef23dbfc17' before making global git config changes
+2025-10-04T04:45:51.5872668Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-04T04:45:51.5875441Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:51.5906159Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-04T04:45:51.5934959Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-04T04:45:51.6159690Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-04T04:45:51.6180244Z http.https://github.com/.extraheader
+2025-10-04T04:45:51.6191034Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-10-04T04:45:51.6218414Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-04T04:45:51.6533992Z Cleaning up orphan processes

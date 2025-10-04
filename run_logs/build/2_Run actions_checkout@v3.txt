@@ -1,0 +1,108 @@
+﻿2025-10-04T04:45:26.9577031Z ##[group]Run actions/checkout@v3
+2025-10-04T04:45:26.9577963Z with:
+2025-10-04T04:45:26.9578489Z   repository: RobertJStewart/zillow-market-tool
+2025-10-04T04:45:26.9579277Z   token: ***
+2025-10-04T04:45:26.9579696Z   ssh-strict: true
+2025-10-04T04:45:26.9580156Z   persist-credentials: true
+2025-10-04T04:45:26.9580628Z   clean: true
+2025-10-04T04:45:26.9581073Z   sparse-checkout-cone-mode: true
+2025-10-04T04:45:26.9581592Z   fetch-depth: 1
+2025-10-04T04:45:26.9582020Z   fetch-tags: false
+2025-10-04T04:45:26.9582436Z   lfs: false
+2025-10-04T04:45:26.9582832Z   submodules: false
+2025-10-04T04:45:26.9583269Z   set-safe-directory: true
+2025-10-04T04:45:26.9583973Z ##[endgroup]
+2025-10-04T04:45:27.0422666Z Syncing repository: RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.0424988Z ##[group]Getting Git version info
+2025-10-04T04:45:27.0425865Z Working directory is '/home/runner/work/zillow-market-tool/zillow-market-tool'
+2025-10-04T04:45:27.0427059Z [command]/usr/bin/git version
+2025-10-04T04:45:27.0488161Z git version 2.51.0
+2025-10-04T04:45:27.0514149Z ##[endgroup]
+2025-10-04T04:45:27.0528647Z Temporarily overriding HOME='/home/runner/work/_temp/b41d4552-8f02-47f6-ad8e-f356839891fe' before making global git config changes
+2025-10-04T04:45:27.0531822Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-04T04:45:27.0533280Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:27.0567439Z Deleting the contents of '/home/runner/work/zillow-market-tool/zillow-market-tool'
+2025-10-04T04:45:27.0570780Z ##[group]Initializing the repository
+2025-10-04T04:45:27.0573641Z [command]/usr/bin/git init /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:27.0668682Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-10-04T04:45:27.0670050Z hint: is subject to change. To configure the initial branch name to use in all
+2025-10-04T04:45:27.0671123Z hint: of your new repositories, which will suppress this warning, call:
+2025-10-04T04:45:27.0672489Z hint:
+2025-10-04T04:45:27.0673357Z hint: 	git config --global init.defaultBranch <name>
+2025-10-04T04:45:27.0674092Z hint:
+2025-10-04T04:45:27.0674873Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-10-04T04:45:27.0676125Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-10-04T04:45:27.0676987Z hint:
+2025-10-04T04:45:27.0677425Z hint: 	git branch -m <name>
+2025-10-04T04:45:27.0678043Z hint:
+2025-10-04T04:45:27.0678867Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-10-04T04:45:27.0680220Z Initialized empty Git repository in /home/runner/work/zillow-market-tool/zillow-market-tool/.git/
+2025-10-04T04:45:27.0682556Z [command]/usr/bin/git remote add origin https://github.com/RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.0717138Z ##[endgroup]
+2025-10-04T04:45:27.0720072Z ##[group]Disabling automatic garbage collection
+2025-10-04T04:45:27.0720783Z [command]/usr/bin/git config --local gc.auto 0
+2025-10-04T04:45:27.0745915Z ##[endgroup]
+2025-10-04T04:45:27.0746640Z ##[group]Setting up auth
+2025-10-04T04:45:27.0750977Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-04T04:45:27.0777701Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-04T04:45:27.1095519Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-04T04:45:27.1121160Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-10-04T04:45:27.1337361Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-10-04T04:45:27.1369226Z ##[endgroup]
+2025-10-04T04:45:27.1370133Z ##[group]Fetching the repository
+2025-10-04T04:45:27.1377813Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +671337c1583f530353ab0eeff41186194800ebb5:refs/remotes/origin/main
+2025-10-04T04:45:27.4610289Z remote: Enumerating objects: 21, done.        
+2025-10-04T04:45:27.4611898Z remote: Counting objects:   4% (1/21)        
+2025-10-04T04:45:27.4613256Z remote: Counting objects:   9% (2/21)        
+2025-10-04T04:45:27.4614414Z remote: Counting objects:  14% (3/21)        
+2025-10-04T04:45:27.4615586Z remote: Counting objects:  19% (4/21)        
+2025-10-04T04:45:27.4616681Z remote: Counting objects:  23% (5/21)        
+2025-10-04T04:45:27.4617440Z remote: Counting objects:  28% (6/21)        
+2025-10-04T04:45:27.4618166Z remote: Counting objects:  33% (7/21)        
+2025-10-04T04:45:27.4618896Z remote: Counting objects:  38% (8/21)        
+2025-10-04T04:45:27.4619567Z remote: Counting objects:  42% (9/21)        
+2025-10-04T04:45:27.4620314Z remote: Counting objects:  47% (10/21)        
+2025-10-04T04:45:27.4621383Z remote: Counting objects:  52% (11/21)        
+2025-10-04T04:45:27.4622386Z remote: Counting objects:  57% (12/21)        
+2025-10-04T04:45:27.4623347Z remote: Counting objects:  61% (13/21)        
+2025-10-04T04:45:27.4624513Z remote: Counting objects:  66% (14/21)        
+2025-10-04T04:45:27.4625516Z remote: Counting objects:  71% (15/21)        
+2025-10-04T04:45:27.4626494Z remote: Counting objects:  76% (16/21)        
+2025-10-04T04:45:27.4627475Z remote: Counting objects:  80% (17/21)        
+2025-10-04T04:45:27.4628449Z remote: Counting objects:  85% (18/21)        
+2025-10-04T04:45:27.4629491Z remote: Counting objects:  90% (19/21)        
+2025-10-04T04:45:27.4630482Z remote: Counting objects:  95% (20/21)        
+2025-10-04T04:45:27.4631460Z remote: Counting objects: 100% (21/21)        
+2025-10-04T04:45:27.4632492Z remote: Counting objects: 100% (21/21), done.        
+2025-10-04T04:45:27.4633859Z remote: Compressing objects:   5% (1/18)        
+2025-10-04T04:45:27.4635467Z remote: Compressing objects:  11% (2/18)        
+2025-10-04T04:45:27.4636520Z remote: Compressing objects:  16% (3/18)        
+2025-10-04T04:45:27.4637727Z remote: Compressing objects:  22% (4/18)        
+2025-10-04T04:45:27.4638778Z remote: Compressing objects:  27% (5/18)        
+2025-10-04T04:45:27.4639802Z remote: Compressing objects:  33% (6/18)        
+2025-10-04T04:45:27.4640872Z remote: Compressing objects:  38% (7/18)        
+2025-10-04T04:45:27.4641925Z remote: Compressing objects:  44% (8/18)        
+2025-10-04T04:45:27.4642978Z remote: Compressing objects:  50% (9/18)        
+2025-10-04T04:45:27.4644002Z remote: Compressing objects:  55% (10/18)        
+2025-10-04T04:45:27.4645271Z remote: Compressing objects:  61% (11/18)        
+2025-10-04T04:45:27.4646313Z remote: Compressing objects:  66% (12/18)        
+2025-10-04T04:45:27.4647356Z remote: Compressing objects:  72% (13/18)        
+2025-10-04T04:45:27.4648388Z remote: Compressing objects:  77% (14/18)        
+2025-10-04T04:45:27.4649450Z remote: Compressing objects:  83% (15/18)        
+2025-10-04T04:45:27.4650507Z remote: Compressing objects:  88% (16/18)        
+2025-10-04T04:45:27.4651548Z remote: Compressing objects:  94% (17/18)        
+2025-10-04T04:45:27.4652684Z remote: Compressing objects: 100% (18/18)        
+2025-10-04T04:45:27.4653799Z remote: Compressing objects: 100% (18/18), done.        
+2025-10-04T04:45:27.4655275Z remote: Total 21 (delta 0), reused 15 (delta 0), pack-reused 0 (from 0)        
+2025-10-04T04:45:27.4718032Z From https://github.com/RobertJStewart/zillow-market-tool
+2025-10-04T04:45:27.4719034Z  * [new ref]         671337c1583f530353ab0eeff41186194800ebb5 -> origin/main
+2025-10-04T04:45:27.4752212Z ##[endgroup]
+2025-10-04T04:45:27.4753018Z ##[group]Determining the checkout info
+2025-10-04T04:45:27.4754383Z ##[endgroup]
+2025-10-04T04:45:27.4755242Z ##[group]Checking out the ref
+2025-10-04T04:45:27.4758164Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-10-04T04:45:27.4809663Z Switched to a new branch 'main'
+2025-10-04T04:45:27.4812688Z branch 'main' set up to track 'origin/main'.
+2025-10-04T04:45:27.4818621Z ##[endgroup]
+2025-10-04T04:45:27.4849582Z [command]/usr/bin/git log -1 --format='%H'
+2025-10-04T04:45:27.4870569Z '671337c1583f530353ab0eeff41186194800ebb5'

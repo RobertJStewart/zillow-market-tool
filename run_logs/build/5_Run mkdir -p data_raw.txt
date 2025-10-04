@@ -1,0 +1,26 @@
+﻿2025-10-04T04:45:46.3613935Z ##[group]Run mkdir -p data_raw
+2025-10-04T04:45:46.3614529Z [36;1mmkdir -p data_raw[0m
+2025-10-04T04:45:46.3615396Z [36;1mcurl -o data_raw/zhvi.csv https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv[0m
+2025-10-04T04:45:46.3616330Z [36;1mcurl -o data_raw/zori.csv https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_sa_month.csv[0m
+2025-10-04T04:45:46.3651843Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:46.3652068Z env:
+2025-10-04T04:45:46.3652307Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3652699Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:46.3653095Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3653429Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3653766Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:46.3654109Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:46.3654577Z ##[endgroup]
+2025-10-04T04:45:46.3789283Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2025-10-04T04:45:46.3790070Z                                  Dload  Upload   Total   Spent    Left  Speed
+2025-10-04T04:45:46.3790386Z 
+2025-10-04T04:45:46.8302756Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2025-10-04T04:45:47.5940057Z   0  112M    0 32312    0     0  71572      0  0:27:25 --:--:--  0:27:25 71486
+2025-10-04T04:45:48.1302874Z  69  112M   69 78.0M    0     0  64.1M      0  0:00:01  0:00:01 --:--:-- 64.1M
+2025-10-04T04:45:48.1303610Z 100  112M  100  112M    0     0  64.1M      0  0:00:01  0:00:01 --:--:-- 64.1M
+2025-10-04T04:45:48.1385270Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2025-10-04T04:45:48.1385993Z                                  Dload  Upload   Total   Spent    Left  Speed
+2025-10-04T04:45:48.1386319Z 
+2025-10-04T04:45:48.5938018Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+2025-10-04T04:45:48.6187489Z  86 8353k   86 7233k    0     0  15.5M      0 --:--:-- --:--:-- --:--:-- 15.4M
+2025-10-04T04:45:48.6188146Z 100 8353k  100 8353k    0     0  16.9M      0 --:--:-- --:--:-- --:--:-- 16.9M

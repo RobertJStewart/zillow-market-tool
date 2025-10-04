@@ -1,0 +1,12 @@
+﻿2025-10-04T04:45:51.5082873Z Post job cleanup.
+2025-10-04T04:45:51.5794705Z [command]/usr/bin/git version
+2025-10-04T04:45:51.5829386Z git version 2.51.0
+2025-10-04T04:45:51.5871458Z Temporarily overriding HOME='/home/runner/work/_temp/531a2dcd-509d-4372-a6ed-65ef23dbfc17' before making global git config changes
+2025-10-04T04:45:51.5872664Z Adding repository directory to the temporary git global config as a safe directory
+2025-10-04T04:45:51.5875425Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/zillow-market-tool/zillow-market-tool
+2025-10-04T04:45:51.5906143Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-10-04T04:45:51.5934943Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-10-04T04:45:51.6159675Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-10-04T04:45:51.6180162Z http.https://github.com/.extraheader
+2025-10-04T04:45:51.6191021Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-10-04T04:45:51.6218401Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"

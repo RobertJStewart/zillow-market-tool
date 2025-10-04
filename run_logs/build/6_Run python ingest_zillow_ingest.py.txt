@@ -1,0 +1,20 @@
+﻿2025-10-04T04:45:48.6240635Z ##[group]Run python ingest/zillow_ingest.py
+2025-10-04T04:45:48.6241149Z [36;1mpython ingest/zillow_ingest.py[0m
+2025-10-04T04:45:48.6241416Z [36;1mpython transform/run_sql.py[0m
+2025-10-04T04:45:48.6241678Z [36;1mpython transform/export_zip_geojson.py[0m
+2025-10-04T04:45:48.6241963Z [36;1mpython transform/project_to_h3.py[0m
+2025-10-04T04:45:48.6274865Z shell: /usr/bin/bash -e {0}
+2025-10-04T04:45:48.6275085Z env:
+2025-10-04T04:45:48.6275324Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6275719Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib/pkgconfig
+2025-10-04T04:45:48.6276098Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6276435Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6276766Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.18/x64
+2025-10-04T04:45:48.6277120Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.18/x64/lib
+2025-10-04T04:45:48.6277405Z ##[endgroup]
+2025-10-04T04:45:51.2501014Z ✅ Zillow CSVs loaded into DuckDB
+2025-10-04T04:45:51.4896148Z Traceback (most recent call last):
+2025-10-04T04:45:51.4903069Z   File "/home/runner/work/zillow-market-tool/zillow-market-tool/transform/run_sql.py", line 8, in <module>
+2025-10-04T04:45:51.4903780Z     con.execute(sql)
+2025-10-04T04:45:51.4904420Z duckdb.duckdb.ParserException: Parser Error: syntax error at or near "CREATE"
+2025-10-04T04:45:51.4995616Z ##[error]Process completed with exit code 1.
