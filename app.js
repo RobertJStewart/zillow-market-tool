@@ -572,26 +572,12 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
     
     const features = dataSource.features
         .map((feature, index) => {
-            console.log(`🔍 Processing feature ${index}:`, {
-                hasTimeValues: !!feature.timeValues,
-                hasPropertiesTimeValues: !!feature.properties.timeValues,
-                timeValuesKeys: feature.timeValues ? Object.keys(feature.timeValues) : (feature.properties.timeValues ? Object.keys(feature.properties.timeValues) : 'none'),
-                hasGeometry: !!feature.geometry,
-                properties: feature.properties
-            });
-            
             const timeData = feature.timeValues?.[date] || feature.properties.timeValues?.[date];
             if (!timeData) {
-                console.log(`❌ No time data for ${date} in feature ${index}`, {
-                    hasTimeValues: !!feature.timeValues,
-                    hasPropertiesTimeValues: !!feature.properties.timeValues,
-                    availableDates: feature.timeValues ? Object.keys(feature.timeValues) : (feature.properties.timeValues ? Object.keys(feature.properties.timeValues) : 'none')
-                });
                 return null;
             }
             
             const value = timeData[dataType] || 0;
-            console.log(`✅ Feature ${index} has value ${value} for ${dataType}`);
             
             return {
                 type: 'Feature',
@@ -614,11 +600,14 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
         return null;
     }
     
+    // Collect styling info for consolidated logging
+    const stylingInfo = [];
+    
     const layer = L.geoJSON(features, {
         style: function(feature) {
             const value = feature.properties.value;
             const color = getColorForValue(value, dataType);
-            console.log(`🎨 Styling feature with value ${value}, color ${color}`);
+            stylingInfo.push({ id: feature.properties.id, value: value, color: color });
             
             return {
                 fillColor: color,
@@ -641,6 +630,11 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
             `);
         }
     });
+    
+    // Log consolidated styling information
+    console.log(`🎨 Styled ${stylingInfo.length} features:`, stylingInfo.slice(0, 5).map(info => 
+        `${info.id}: $${Math.round(info.value).toLocaleString()} → ${info.color}`
+    ).join(', ') + (stylingInfo.length > 5 ? ` ... and ${stylingInfo.length - 5} more` : ''));
     
     console.log('✅ Layer created successfully');
     return layer;
