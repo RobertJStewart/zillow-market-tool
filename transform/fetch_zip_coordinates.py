@@ -10,26 +10,51 @@ import time
 import os
 from typing import Dict, Tuple
 
-def get_zip_coordinates(zip_code: str) -> Tuple[float, float]:
+def get_zip_coordinates_batch(zip_codes: List[str]) -> Dict[str, Tuple[float, float]]:
     """
-    Get coordinates for a ZIP code using a geocoding service.
-    Using a free service for demonstration - in production you'd want a more reliable service.
+    Get coordinates for multiple ZIP codes in batches for much better performance.
     """
-    try:
-        # Using a free geocoding service (you might want to use Google Maps API, etc.)
-        url = f"https://api.zippopotam.us/us/{zip_code}"
-        response = requests.get(url, timeout=5)
+    coordinates = {}
+    batch_size = 50  # Process 50 ZIP codes at a time
+    
+    for i in range(0, len(zip_codes), batch_size):
+        batch = zip_codes[i:i + batch_size]
+        print(f"📍 Processing batch {i//batch_size + 1}/{(len(zip_codes) + batch_size - 1)//batch_size} ({len(batch)} ZIP codes)")
         
-        if response.status_code == 200:
-            data = response.json()
-            if 'places' in data and len(data['places']) > 0:
-                place = data['places'][0]
-                return float(place['latitude']), float(place['longitude'])
+        # Use concurrent requests for much faster processing
+        import concurrent.futures
+        import threading
         
-        return None, None
-    except Exception as e:
-        print(f"Error getting coordinates for {zip_code}: {e}")
-        return None, None
+        def get_single_coordinate(zip_code):
+            try:
+                url = f"https://api.zippopotam.us/us/{zip_code}"
+                response = requests.get(url, timeout=3)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'places' in data and len(data['places']) > 0:
+                        place = data['places'][0]
+                        return zip_code, (float(place['latitude']), float(place['longitude']))
+                
+                return zip_code, (None, None)
+            except Exception as e:
+                return zip_code, (None, None)
+        
+        # Use ThreadPoolExecutor for concurrent requests
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            results = list(executor.map(get_single_coordinate, batch))
+            
+            for zip_code, coords in results:
+                if coords[0] is not None and coords[1] is not None:
+                    coordinates[zip_code] = {'lat': coords[0], 'lon': coords[1]}
+                    print(f"✅ {zip_code}: {coords[0]}, {coords[1]}")
+                else:
+                    print(f"❌ {zip_code}: No coordinates found")
+        
+        # Small delay between batches to be respectful to the API
+        time.sleep(0.5)
+    
+    return coordinates
 
 def load_zip_codes_from_geojson() -> list:
     """Load ZIP codes from the existing GeoJSON file."""
@@ -66,34 +91,23 @@ def main():
         except Exception as e:
             print(f"⚠️ Error loading existing coordinates: {e}")
     
-    # Process ZIP codes
-    coordinates = existing_coords.copy()
-    processed = 0
-    new_coords = 0
+    # Filter out ZIP codes we already have
+    missing_zip_codes = [zip_code for zip_code in zip_codes if zip_code not in existing_coords]
     
-    for i, zip_code in enumerate(zip_codes):
-        if zip_code in coordinates:
-            processed += 1
-            continue
-            
-        print(f"📍 Processing {zip_code} ({i+1}/{len(zip_codes)})")
-        
-        lat, lon = get_zip_coordinates(zip_code)
-        if lat is not None and lon is not None:
-            coordinates[zip_code] = {'lat': lat, 'lon': lon}
-            new_coords += 1
-            print(f"✅ {zip_code}: {lat}, {lon}")
-        else:
-            print(f"❌ {zip_code}: No coordinates found")
-        
-        # Rate limiting - be nice to the API
-        time.sleep(0.1)
-        
-        # Save progress every 100 coordinates
-        if (i + 1) % 100 == 0:
-            with open(coords_file, 'w') as f:
-                json.dump(coordinates, f, indent=2)
-            print(f"💾 Saved progress: {len(coordinates)} coordinates")
+    if not missing_zip_codes:
+        print("✅ All ZIP codes already have coordinates!")
+        return
+    
+    print(f"🚀 Processing {len(missing_zip_codes)} missing ZIP codes in batches...")
+    
+    # Process missing ZIP codes in batches
+    new_coordinates = get_zip_coordinates_batch(missing_zip_codes)
+    
+    # Merge with existing coordinates
+    coordinates = {**existing_coords, **new_coordinates}
+    
+    processed = len(existing_coords)
+    new_coords = len(new_coordinates)
     
     # Save final results
     with open(coords_file, 'w') as f:

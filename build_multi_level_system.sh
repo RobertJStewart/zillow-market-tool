@@ -23,8 +23,8 @@ pip install requests
 echo ""
 echo "📍 Step 1: Getting ZIP code coordinates..."
 if [ ! -f "data_demo/zip_coordinates.json" ]; then
-    echo "🔄 Fetching coordinates (this may take a while)..."
-    python transform/fetch_zip_coordinates.py
+    echo "🚀 Using fast coordinate fetching method..."
+    python transform/fetch_zip_coordinates_fast.py
 else
     echo "✅ ZIP coordinates already exist"
 fi
