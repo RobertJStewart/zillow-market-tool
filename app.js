@@ -730,13 +730,33 @@ async function loadH3Data() {
 
 // Get color for value based on data type
 function getColorForValue(value, dataType) {
-    // Simple color scale - in a real implementation, you'd want more sophisticated scaling
-    const maxValue = dataType === 'zhvi' ? 2000000 : 5000;
-    const normalized = Math.min(value / maxValue, 1);
+    // Get current data range for better scaling
+    const allValues = [];
     
-    // Color scale from green (low) to red (high)
-    const hue = (1 - normalized) * 120; // 120 = green, 0 = red
-    return `hsl(${hue}, 70%, 50%)`;
+    if (timeSeriesData) {
+        timeSeriesData.features.forEach(feature => {
+            Object.values(feature.timeValues || {}).forEach(timeData => {
+                if (timeData[dataType]) {
+                    allValues.push(timeData[dataType]);
+                }
+            });
+        });
+    }
+    
+    if (allValues.length === 0) {
+        return '#cccccc';
+    }
+    
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const normalized = (value - minValue) / (maxValue - minValue);
+    
+    // Enhanced color scale: blue (low) -> green -> yellow -> orange -> red (high)
+    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
+    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
+    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
+    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
+    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
 }
 
 // Update color legend
@@ -980,36 +1000,6 @@ function clearDrawings() {
     }
 }
 
-// Enhanced color scaling
-function getColorForValue(value, dataType) {
-    // Get current data range for better scaling
-    const allValues = [];
-    
-    if (timeSeriesData) {
-        timeSeriesData.features.forEach(feature => {
-            Object.values(feature.timeValues || {}).forEach(timeData => {
-                if (timeData[dataType]) {
-                    allValues.push(timeData[dataType]);
-                }
-            });
-        });
-    }
-    
-    if (allValues.length === 0) {
-        return '#cccccc';
-    }
-    
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-    const normalized = (value - minValue) / (maxValue - minValue);
-    
-    // Enhanced color scale: blue (low) -> green -> yellow -> orange -> red (high)
-    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
-    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
-    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
-    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
-    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
-}
 
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', function() {
