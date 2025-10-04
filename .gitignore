@@ -1,0 +1,38 @@
+# Virtual Environment
+venv/
+env/
+.env
+
+# Database files
+*.duckdb
+*.db
+*.sqlite
+
+# Large data files
+data_raw/
+*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
