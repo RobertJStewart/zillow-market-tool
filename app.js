@@ -724,15 +724,12 @@ async function loadH3Data() {
 
 // Get color for value based on data type
 function getColorForValue(value, dataType) {
-    console.log(`🎨 getColorForValue called: value=${value}, dataType=${dataType}, timeSeriesData exists: ${!!timeSeriesData}`);
-    
     // Get current data range for better scaling
     const allValues = [];
     
     if (timeSeriesData) {
-        console.log(`🎨 timeSeriesData has ${timeSeriesData.features.length} features`);
         timeSeriesData.features.forEach(feature => {
-            Object.values(feature.timeValues || {}).forEach(timeData => {
+            Object.values(feature.properties.timeValues || {}).forEach(timeData => {
                 if (timeData[dataType]) {
                     allValues.push(timeData[dataType]);
                 }
@@ -740,10 +737,7 @@ function getColorForValue(value, dataType) {
         });
     }
     
-    console.log(`🎨 Found ${allValues.length} values for color scaling`);
-    
     if (allValues.length === 0) {
-        console.log(`🎨 No values found, returning gray`);
         return '#cccccc';
     }
     
@@ -751,18 +745,12 @@ function getColorForValue(value, dataType) {
     const maxValue = Math.max(...allValues);
     const normalized = (value - minValue) / (maxValue - minValue);
     
-    console.log(`🎨 Color calc: min=${minValue}, max=${maxValue}, normalized=${normalized}`);
-    
     // Enhanced color scale: blue (low) -> green -> yellow -> orange -> red (high)
-    let color;
-    if (normalized < 0.2) color = `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
-    else if (normalized < 0.4) color = `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
-    else if (normalized < 0.6) color = `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
-    else if (normalized < 0.8) color = `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
-    else color = `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
-    
-    console.log(`🎨 Final color: ${color}`);
-    return color;
+    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
+    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
+    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
+    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
+    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
 }
 
 // Update color legend
