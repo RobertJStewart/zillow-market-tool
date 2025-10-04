@@ -16,9 +16,9 @@ jobs:
           mkdir -p data_raw
           curl -o data_raw/zhvi.csv https://files.zillowstatic.com/research/public_csvs/zhvi/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
           curl -o data_raw/zori.csv https://files.zillowstatic.com/research/public_csvs/zori/Zip_zori_uc_sfrcondomfr_sm_sa_month.csv
-      - run: |
+    - run: |
           python ingest/zillow_ingest.py
-          duckdb -f transform/build_zip_metrics.sql
+          python transform/run_sql.py
           python transform/export_zip_geojson.py
           python transform/project_to_h3.py
       - uses: peaceiris/actions-gh-pages@v3
