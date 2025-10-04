@@ -562,17 +562,34 @@ async function updateMapData() {
 
 // Create ZIP code layer
 function createZipLayer(date, dataType, dataSource = timeSeriesData) {
+    console.log(`🔍 Creating ZIP layer with ${dataSource.features.length} source features`);
+    console.log(`📅 Looking for date: ${date}`);
+    console.log(`📊 Data type: ${dataType}`);
+    
     const features = dataSource.features
-        .map(feature => {
+        .map((feature, index) => {
+            console.log(`🔍 Processing feature ${index}:`, {
+                hasTimeValues: !!feature.timeValues,
+                timeValuesKeys: feature.timeValues ? Object.keys(feature.timeValues) : 'none',
+                hasGeometry: !!feature.geometry,
+                properties: feature.properties
+            });
+            
             const timeData = feature.timeValues?.[date];
-            if (!timeData) return null;
+            if (!timeData) {
+                console.log(`❌ No time data for ${date} in feature ${index}`);
+                return null;
+            }
+            
+            const value = timeData[dataType] || 0;
+            console.log(`✅ Feature ${index} has value ${value} for ${dataType}`);
             
             return {
                 type: 'Feature',
                 geometry: feature.geometry,
                 properties: {
                     id: feature.properties.zcta || feature.properties.stateCode,
-                    value: timeData[dataType] || 0,
+                    value: value,
                     date: date,
                     zipCount: feature.properties.zipCount || 1,
                     isState: !!feature.properties.stateCode
@@ -583,10 +600,16 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
     
     console.log(`🎨 Rendering ${features.length} features`);
     
-    return L.geoJSON(features, {
+    if (features.length === 0) {
+        console.error('❌ No features to render!');
+        return null;
+    }
+    
+    const layer = L.geoJSON(features, {
         style: function(feature) {
             const value = feature.properties.value;
             const color = getColorForValue(value, dataType);
+            console.log(`🎨 Styling feature with value ${value}, color ${color}`);
             
             return {
                 fillColor: color,
@@ -609,6 +632,9 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
             `);
         }
     });
+    
+    console.log('✅ Layer created successfully');
+    return layer;
 }
 
 // Create H3 layer
