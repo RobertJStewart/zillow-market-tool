@@ -1,0 +1,1 @@
+console.log('✅ Zillow Market Tool frontend loaded');
