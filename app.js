@@ -32,7 +32,7 @@ async function loadData() {
             .map(feature => ({
                 zip: feature.properties.zcta,
                 zhvi: feature.properties.zhvi || 0,
-                zori: isNaN(feature.properties.zori) ? 0 : feature.properties.zori,
+                zori: (feature.properties.zori === null || isNaN(feature.properties.zori)) ? 0 : feature.properties.zori,
                 date: feature.properties.date
             }))
             .filter(item => item.zhvi > 0)
@@ -136,7 +136,7 @@ function displayDataTable(data) {
             <tr>
                 <td>${item.zip}</td>
                 <td>$${item.zhvi.toLocaleString()}</td>
-                <td>$${item.zori.toLocaleString()}</td>
+                <td>$${(item.zori || 0).toLocaleString()}</td>
                 <td>${item.date}</td>
             </tr>
         `;
