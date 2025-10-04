@@ -13,9 +13,9 @@ async function loadData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // Check if response is JSON
+        // Check if response is JSON (including GeoJSON)
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
+        if (!contentType || (!contentType.includes('application/json') && !contentType.includes('application/geo+json'))) {
             throw new Error(`Expected JSON but got: ${contentType}`);
         }
         
