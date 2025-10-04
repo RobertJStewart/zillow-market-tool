@@ -258,7 +258,9 @@ async function loadTimeSeriesData() {
         initializeTimeSlider();
         
         // Load initial map data
-        updateMapData();
+        console.log('🔄 Calling updateMapData...');
+        await updateMapData();
+        console.log('✅ updateMapData completed');
         
     } catch (error) {
         console.error('❌ Error loading time series data:', error);
@@ -455,18 +457,34 @@ function initializeTimeSlider() {
 
 // Update map data based on current time and settings
 async function updateMapData() {
-    if (!map || !timeSeriesData) return;
+    console.log('🔄 updateMapData called');
+    
+    if (!map) {
+        console.error('❌ Map not initialized');
+        return;
+    }
+    
+    if (!timeSeriesData) {
+        console.error('❌ Time series data not loaded');
+        return;
+    }
+    
+    console.log('✅ Map and timeSeriesData available');
     
     const slider = document.getElementById('time-slider');
     const dataType = document.getElementById('data-type').value;
     const overlayType = document.getElementById('overlay-type').value;
     
-    if (!slider) return;
+    if (!slider) {
+        console.error('❌ Time slider not found');
+        return;
+    }
     
     const timeIndex = parseInt(slider.value);
     const currentDate = timeSeriesData.dates[timeIndex];
     
     console.log(`📅 Updating map for ${currentDate}, ${dataType}, ${overlayType}, zoom: ${currentZoomLevel}`);
+    console.log(`📊 Time series data has ${timeSeriesData.features.length} features`);
     
     // Load detailed data if needed
     await loadDetailedData();
@@ -480,12 +498,16 @@ async function updateMapData() {
         console.log('🗺️ Using state-level data');
     }
     
+    console.log(`📊 Data source has ${dataSource.features.length} features`);
+    
     // Clear existing layer
     if (currentLayer) {
+        console.log('🗑️ Removing existing layer');
         map.removeLayer(currentLayer);
     }
     
     // Create new layer based on overlay type and zoom level
+    console.log(`🎨 Creating ${overlayType} layer...`);
     if (overlayType === 'zip') {
         currentLayer = createZipLayer(currentDate, dataType, dataSource);
     } else {
@@ -493,11 +515,16 @@ async function updateMapData() {
     }
     
     if (currentLayer) {
+        console.log('✅ Layer created, adding to map');
         map.addLayer(currentLayer);
+        console.log('✅ Layer added to map');
+    } else {
+        console.error('❌ Failed to create layer');
     }
     
     // Update color legend
     updateColorLegend();
+    console.log('✅ updateMapData completed');
 }
 
 // Create ZIP code layer
