@@ -11,7 +11,7 @@ zori_clean AS (
     "Date" AS date,
     Value AS zori
   FROM zori_raw
-)
+),
 CREATE OR REPLACE TABLE zip_metrics_monthly AS
 SELECT 
   m.zcta,
