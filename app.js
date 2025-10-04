@@ -568,6 +568,8 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
     console.log(`📅 Looking for date: ${date}`);
     console.log(`📊 Data type: ${dataType}`);
     
+    console.log(`🔍 Looking for date: ${date} in ${dataSource.features.length} features`);
+    
     const features = dataSource.features
         .map((feature, index) => {
             console.log(`🔍 Processing feature ${index}:`, {
@@ -580,7 +582,11 @@ function createZipLayer(date, dataType, dataSource = timeSeriesData) {
             
             const timeData = feature.timeValues?.[date] || feature.properties.timeValues?.[date];
             if (!timeData) {
-                console.log(`❌ No time data for ${date} in feature ${index}`);
+                console.log(`❌ No time data for ${date} in feature ${index}`, {
+                    hasTimeValues: !!feature.timeValues,
+                    hasPropertiesTimeValues: !!feature.properties.timeValues,
+                    availableDates: feature.timeValues ? Object.keys(feature.timeValues) : (feature.properties.timeValues ? Object.keys(feature.properties.timeValues) : 'none')
+                });
                 return null;
             }
             
