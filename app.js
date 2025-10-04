@@ -204,6 +204,8 @@ let timeSeriesData = null;
 let currentLayer = null;
 let isPlaying = false;
 let playInterval = null;
+let drawnItems = null;
+let isDrawing = false;
 
 // Initialize map when Time Series page is shown
 function initializeMap() {
@@ -218,6 +220,10 @@ function initializeMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    
+    // Initialize drawing layer
+    drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
     
     console.log('✅ Map initialized');
 }
@@ -361,11 +367,90 @@ function createZipLayer(date, dataType) {
     });
 }
 
-// Create H3 layer (simplified for now)
+// Create H3 layer
 function createH3Layer(date, dataType) {
-    // For now, just show a message that H3 is not fully implemented
-    console.log('H3 layer not yet implemented');
-    return null;
+    try {
+        // Load H3 grid data
+        const h3Data = window.h3GridData; // We'll load this separately
+        
+        if (!h3Data) {
+            console.log('H3 data not loaded yet, loading...');
+            loadH3Data().then(() => {
+                updateMapData(); // Retry after loading
+            });
+            return null;
+        }
+        
+        const features = h3Data.features
+            .map(feature => {
+                const timeData = feature.properties.timeValues?.[date];
+                if (!timeData) return null;
+                
+                return {
+                    type: 'Feature',
+                    geometry: feature.geometry,
+                    properties: {
+                        hexId: feature.properties.hexId,
+                        value: timeData[dataType] || 0,
+                        date: date
+                    }
+                };
+            })
+            .filter(f => f !== null);
+        
+        return L.geoJSON(features, {
+            style: function(feature) {
+                const value = feature.properties.value;
+                const color = getColorForValue(value, dataType);
+                
+                return {
+                    fillColor: color,
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    fillOpacity: 0.8
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const props = feature.properties;
+                layer.bindPopup(`
+                    <strong>H3 Hex: ${props.hexId}</strong><br>
+                    ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
+                    Date: ${props.date}
+                `);
+            }
+        });
+    } catch (error) {
+        console.error('Error creating H3 layer:', error);
+        return null;
+    }
+}
+
+// Load H3 data
+async function loadH3Data() {
+    try {
+        const response = await fetch('data_demo/grid_latest.geojson?v=' + Date.now());
+        const data = await response.json();
+        
+        // Simulate time series for H3 data
+        window.h3GridData = {
+            features: data.features.map(feature => ({
+                ...feature,
+                timeValues: {
+                    '2024-01': { zhvi: feature.properties.avg_zhvi * 0.95, zori: (feature.properties.avg_zori || 0) * 0.95 },
+                    '2024-02': { zhvi: feature.properties.avg_zhvi * 0.97, zori: (feature.properties.avg_zori || 0) * 0.97 },
+                    '2024-03': { zhvi: feature.properties.avg_zhvi * 0.99, zori: (feature.properties.avg_zori || 0) * 0.99 },
+                    '2024-04': { zhvi: feature.properties.avg_zhvi * 1.01, zori: (feature.properties.avg_zori || 0) * 1.01 },
+                    '2024-05': { zhvi: feature.properties.avg_zhvi * 1.03, zori: (feature.properties.avg_zori || 0) * 1.03 },
+                    '2024-06': { zhvi: feature.properties.avg_zhvi, zori: feature.properties.avg_zori || 0 }
+                }
+            }))
+        };
+        
+        console.log('✅ H3 data loaded');
+    } catch (error) {
+        console.error('❌ Error loading H3 data:', error);
+    }
 }
 
 // Get color for value based on data type
@@ -431,6 +516,24 @@ function initializeTimeSeriesPage() {
         });
     }
     
+    // Export button
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportMapData);
+    }
+    
+    // Draw button
+    const drawBtn = document.getElementById('draw-btn');
+    if (drawBtn) {
+        drawBtn.addEventListener('click', toggleDrawing);
+    }
+    
+    // Clear button
+    const clearBtn = document.getElementById('clear-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearDrawings);
+    }
+    
     console.log('✅ Time Series page initialized');
 }
 
@@ -494,6 +597,143 @@ function switchPage(pageName) {
     }
     
     console.log(`📄 Switched to ${pageName} page`);
+}
+
+// Export map data
+function exportMapData() {
+    if (!timeSeriesData || !currentLayer) {
+        alert('No data to export. Please load the map first.');
+        return;
+    }
+    
+    const slider = document.getElementById('time-slider');
+    const dataType = document.getElementById('data-type').value;
+    const overlayType = document.getElementById('overlay-type').value;
+    
+    const timeIndex = parseInt(slider.value);
+    const currentDate = timeSeriesData.dates[timeIndex];
+    
+    // Get current layer data
+    const layerData = currentLayer.toGeoJSON();
+    
+    // Create export data
+    const exportData = {
+        metadata: {
+            date: currentDate,
+            dataType: dataType,
+            overlayType: overlayType,
+            exportTime: new Date().toISOString(),
+            totalFeatures: layerData.features.length
+        },
+        data: layerData
+    };
+    
+    // Create and download JSON file
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `zillow-export-${currentDate}-${dataType}-${overlayType}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('📊 Data exported successfully');
+}
+
+// Toggle drawing mode
+function toggleDrawing() {
+    const drawBtn = document.getElementById('draw-btn');
+    
+    if (isDrawing) {
+        // Disable drawing
+        isDrawing = false;
+        drawBtn.textContent = '✏️ Draw';
+        drawBtn.style.backgroundColor = '#007bff';
+        
+        // Remove drawing tools
+        if (map.drawControl) {
+            map.removeControl(map.drawControl);
+        }
+        
+        console.log('✏️ Drawing mode disabled');
+    } else {
+        // Enable drawing
+        isDrawing = true;
+        drawBtn.textContent = '✏️ Drawing...';
+        drawBtn.style.backgroundColor = '#28a745';
+        
+        // Add drawing tools
+        if (!map.drawControl) {
+            map.drawControl = new L.Control.Draw({
+                edit: {
+                    featureGroup: drawnItems,
+                    remove: true
+                },
+                draw: {
+                    polygon: true,
+                    polyline: true,
+                    rectangle: true,
+                    circle: true,
+                    marker: true,
+                    circlemarker: false
+                }
+            });
+        }
+        
+        map.addControl(map.drawControl);
+        
+        // Handle drawing events
+        map.on(L.Draw.Event.CREATED, function(event) {
+            const layer = event.layer;
+            drawnItems.addLayer(layer);
+            console.log('✏️ Drawing created:', layer);
+        });
+        
+        console.log('✏️ Drawing mode enabled');
+    }
+}
+
+// Clear all drawings
+function clearDrawings() {
+    if (drawnItems) {
+        drawnItems.clearLayers();
+        console.log('🗑️ All drawings cleared');
+    }
+}
+
+// Enhanced color scaling
+function getColorForValue(value, dataType) {
+    // Get current data range for better scaling
+    const allValues = [];
+    
+    if (timeSeriesData) {
+        timeSeriesData.features.forEach(feature => {
+            Object.values(feature.timeValues || {}).forEach(timeData => {
+                if (timeData[dataType]) {
+                    allValues.push(timeData[dataType]);
+                }
+            });
+        });
+    }
+    
+    if (allValues.length === 0) {
+        return '#cccccc';
+    }
+    
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const normalized = (value - minValue) / (maxValue - minValue);
+    
+    // Enhanced color scale: blue (low) -> green -> yellow -> orange -> red (high)
+    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
+    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
+    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
+    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
+    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
 }
 
 // Load data when page loads

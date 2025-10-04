@@ -5,8 +5,10 @@
     <title>Zillow Market Tool</title>
     <link href="style.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 </head>
 <body>
     <h2>Zillow Market Tool (Demo)</h2>
@@ -63,6 +65,18 @@
                 <div class="control-group">
                     <button id="play-pause-btn">▶️ Play</button>
                 </div>
+                
+                <div class="control-group">
+                    <button id="export-btn">📊 Export</button>
+                </div>
+                
+                <div class="control-group">
+                    <button id="draw-btn">✏️ Draw</button>
+                </div>
+                
+                <div class="control-group">
+                    <button id="clear-btn">🗑️ Clear</button>
+                </div>
             </div>
             
             <!-- Time Slider -->
@@ -83,7 +97,7 @@
         </div>
     </div>
     
-    <script src="app.js?v=20250104-3"></script>
+    <script src="app.js?v=20250104-4"></script>
     
     <!-- Footer with data info -->
     <div id="footer-info" style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding: 10px; border-top: 1px solid #eee;">
