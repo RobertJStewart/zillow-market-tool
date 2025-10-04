@@ -54,13 +54,27 @@
                     </select>
                 </div>
                 
-                <div class="control-group">
-                    <label for="overlay-type">Overlay:</label>
-                    <select id="overlay-type">
-                        <option value="zip">ZIP Codes</option>
-                        <option value="h3">H3 Hexagons</option>
-                    </select>
-                </div>
+                        <div class="control-group">
+                            <label for="overlay-type">Geographic Level:</label>
+                            <select id="overlay-type">
+                                <option value="region">Regions</option>
+                                <option value="state_region">State Regions</option>
+                                <option value="state">States</option>
+                                <option value="zipcode">ZIP Codes</option>
+                                <option value="h3">H3 Hexagons</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="statistical-method">Statistics:</label>
+                            <select id="statistical-method">
+                                <option value="average">Average</option>
+                                <option value="median">Median</option>
+                                <option value="max">Maximum</option>
+                                <option value="min">Minimum</option>
+                                <option value="count">Count</option>
+                            </select>
+                        </div>
                 
                 <div class="control-group">
                     <button id="play-pause-btn">▶️ Play</button>
@@ -97,7 +111,7 @@
         </div>
     </div>
     
-    <script src="app.js?v=20250104-18"></script>
+    <script src="app.js?v=20250104-20"></script>
     
     <!-- Footer with data info -->
     <div id="footer-info" style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding: 10px; border-top: 1px solid #eee;">

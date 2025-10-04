@@ -1,103 +1,580 @@
-console.log('✅ Zillow Market Tool frontend loaded');
+// Zillow Market Tool - Multi-Level Geographic Visualization
+// Handles country, region, state, and ZIP code levels with statistical aggregation
 
-// Load and display the Zillow data
-async function loadData() {
+let map, timeSeriesData, currentLayer, isPlaying = false, playInterval;
+let currentZoomLevel = 5;
+let currentGeographicLevel = 'region';
+let currentStatisticalMethod = 'average';
+let currentDataType = 'zhvi';
+
+// Geographic level configuration
+const GEOGRAPHIC_LEVELS = {
+    'region': { zoom_threshold: 4, file: 'data_demo/aggregated/regions.geojson' },
+    'state_region': { zoom_threshold: 6, file: 'data_demo/aggregated/state_regions.geojson' },
+    'state': { zoom_threshold: 8, file: 'data_demo/aggregated/states.geojson' },
+    'zipcode': { zoom_threshold: 10, file: 'data_demo/zip_latest.geojson' },
+    'h3': { zoom_threshold: 10, file: 'data_demo/grid_latest.geojson' }
+};
+
+// Statistical method mapping
+const STATISTICAL_METHODS = {
+    'average': 'avg_',
+    'median': 'median_',
+    'max': 'max_',
+    'min': 'min_',
+    'count': 'count'
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing Zillow Market Tool...');
+    
+    // Set up page switching
+    setupPageSwitching();
+    
+    // Set up map controls
+    setupMapControls();
+    
+    // Initialize map
+    initializeMap();
+    
+    // Load initial data
+    loadTimeSeriesData();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    console.log('✅ Application initialized');
+});
+
+function setupPageSwitching() {
+    const pageButtons = document.querySelectorAll('.page-btn');
+    const pages = document.querySelectorAll('.page-content');
+    
+    pageButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetPage = button.dataset.page;
+            
+            // Update button states
+            pageButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Show/hide pages
+            pages.forEach(page => {
+                page.style.display = page.id === `${targetPage}-page` ? 'block' : 'none';
+            });
+            
+            // Initialize map if switching to time series
+            if (targetPage === 'timeseries' && !map) {
+                initializeMap();
+            }
+        });
+    });
+}
+
+function setupMapControls() {
+    // Geographic level selector
+    const overlayTypeSelect = document.getElementById('overlay-type');
+    overlayTypeSelect.addEventListener('change', (e) => {
+        currentGeographicLevel = e.target.value;
+        updateMapData();
+    });
+    
+    // Statistical method selector
+    const statisticalMethodSelect = document.getElementById('statistical-method');
+    statisticalMethodSelect.addEventListener('change', (e) => {
+        currentStatisticalMethod = e.target.value;
+        updateMapData();
+    });
+    
+    // Data type selector
+    const dataTypeSelect = document.getElementById('data-type');
+    dataTypeSelect.addEventListener('change', (e) => {
+        currentDataType = e.target.value;
+        updateMapData();
+    });
+    
+    // Play/pause button
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    
+    // Export button
+    const exportBtn = document.getElementById('export-btn');
+    exportBtn.addEventListener('click', exportData);
+    
+    // Draw button
+    const drawBtn = document.getElementById('draw-btn');
+    drawBtn.addEventListener('click', toggleDrawing);
+    
+    // Clear button
+    const clearBtn = document.getElementById('clear-btn');
+    clearBtn.addEventListener('click', clearMap);
+}
+
+function initializeMap() {
+    if (map) {
+        map.remove();
+    }
+    
+    // Initialize Leaflet map
+    map = L.map('map').setView([39.8283, -98.5795], 5);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Set up zoom change listener
+    map.on('zoomend', () => {
+        const newZoom = map.getZoom();
+        if (Math.abs(newZoom - currentZoomLevel) > 1) {
+            currentZoomLevel = newZoom;
+            updateGeographicLevel();
+        }
+    });
+    
+    // Initialize drawing tools
+    initializeDrawingTools();
+    
+    console.log('🗺️ Map initialized');
+}
+
+function updateGeographicLevel() {
+    // Determine appropriate geographic level based on zoom
+    let newLevel = 'region';
+    
+    for (const [level, config] of Object.entries(GEOGRAPHIC_LEVELS)) {
+        if (currentZoomLevel <= config.zoom_threshold) {
+            newLevel = level;
+            break;
+        }
+    }
+    
+    if (newLevel !== currentGeographicLevel) {
+        currentGeographicLevel = newLevel;
+        
+        // Update the UI selector
+        const overlaySelect = document.getElementById('overlay-type');
+        overlaySelect.value = newLevel;
+        
+        // Update the map
+        updateMapData();
+        
+        console.log(`🔄 Switched to ${newLevel} level (zoom: ${currentZoomLevel})`);
+    }
+}
+
+async function loadTimeSeriesData() {
     try {
-        // Load the ZIP code data
-        console.log('🔄 Attempting to fetch data...');
-        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
-        console.log('📡 Response status:', response.status);
-        console.log('📡 Response headers:', response.headers.get('content-type'));
+        console.log('📊 Loading time series data...');
+        
+        // Load the appropriate data file based on current level
+        const dataFile = GEOGRAPHIC_LEVELS[currentGeographicLevel].file;
+        const response = await fetch(dataFile + '?v=' + Date.now());
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        // Check if response is JSON (including GeoJSON)
         const contentType = response.headers.get('content-type');
         if (!contentType || (!contentType.includes('application/json') && !contentType.includes('application/geo+json'))) {
             throw new Error(`Expected JSON but got: ${contentType}`);
         }
         
-        const text = await response.text();
-        console.log('📄 Response text length:', text.length);
-        console.log('📄 First 200 chars:', text.substring(0, 200));
+        timeSeriesData = await response.json();
+        console.log(`✅ Loaded ${timeSeriesData.features.length} features from ${dataFile}`);
         
-        const data = JSON.parse(text);
-        console.log('📊 Data loaded successfully');
-        console.log(`📊 Loaded ${data.features.length} ZIP codes`);
+        // Update the map with the new data
+        updateMapData();
         
-        // Extract and sort data by home value
-        const zipData = data.features
-            .map(feature => ({
-                zip: feature.properties.zcta,
-                zhvi: feature.properties.zhvi || 0,
-                zori: (feature.properties.zori === null || isNaN(feature.properties.zori)) ? 0 : feature.properties.zori,
-                date: feature.properties.date
-            }))
-            .filter(item => item.zhvi > 0)
-            .sort((a, b) => b.zhvi - a.zhvi);
+    } catch (error) {
+        console.error('❌ Error loading time series data:', error);
+        document.getElementById('map').innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #666;">
+                <h3>⚠️ Data Loading Error</h3>
+                <p>Could not load geographic data. Please check the console for details.</p>
+                <p><strong>Error:</strong> ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function updateMapData() {
+    if (!map || !timeSeriesData) {
+        console.log('⚠️ Map or data not ready');
+        return;
+    }
+    
+    console.log(`🔄 Updating map data: ${currentGeographicLevel} level, ${currentStatisticalMethod} ${currentDataType}`);
+    
+    // Remove existing layer
+    if (currentLayer) {
+        map.removeLayer(currentLayer);
+    }
+    
+    // Create new layer based on current settings
+    currentLayer = createMapLayer();
+    
+    if (currentLayer) {
+        currentLayer.addTo(map);
+        updateColorLegend();
+        console.log('✅ Map updated successfully');
+    } else {
+        console.error('❌ Failed to create map layer');
+    }
+}
+
+function createMapLayer() {
+    if (!timeSeriesData || !timeSeriesData.features) {
+        console.error('❌ No features to render');
+        return null;
+    }
+    
+    const currentDate = getCurrentDate();
+    const features = timeSeriesData.features.map(feature => {
+        const timeData = feature.properties.timeValues?.[currentDate];
+        if (!timeData) {
+            return null;
+        }
         
-        // Display stats
-        displayStats(zipData);
+        // Get the appropriate value based on statistical method
+        const value = getStatisticalValue(feature.properties, currentDataType, currentStatisticalMethod);
         
-        // Create chart
-        createChart(zipData.slice(0, 20));
+        return {
+            type: 'Feature',
+            geometry: feature.geometry,
+            properties: {
+                id: feature.properties.id || feature.properties.zcta || feature.properties.stateCode,
+                value: value,
+                date: currentDate,
+                level: currentGeographicLevel,
+                method: currentStatisticalMethod,
+                count: feature.properties.count || 1
+            }
+        };
+    }).filter(f => f !== null);
+    
+    console.log(`🎨 Rendering ${features.length} features`);
+    
+    if (features.length === 0) {
+        console.error('❌ No features to render!');
+        return null;
+    }
+    
+    // Create the layer
+    const layer = L.geoJSON(features, {
+        style: function(feature) {
+            const value = feature.properties.value;
+            const color = getColorForValue(value, currentDataType);
+            
+            return {
+                fillColor: color,
+                weight: currentGeographicLevel === 'region' ? 3 : currentGeographicLevel === 'state' ? 2 : 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: currentGeographicLevel === 'region' ? '8' : currentGeographicLevel === 'state' ? '5' : '3',
+                fillOpacity: 0.7
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+            const label = getFeatureLabel(props);
+            
+            layer.bindPopup(`
+                <strong>${label}</strong><br>
+                ${currentDataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
+                Method: ${currentStatisticalMethod}<br>
+                Date: ${props.date}<br>
+                Count: ${props.count}
+            `);
+        }
+    });
+    
+    console.log('✅ Layer created successfully');
+    return layer;
+}
+
+function getStatisticalValue(properties, dataType, method) {
+    const prefix = STATISTICAL_METHODS[method];
+    const propertyName = `${prefix}${dataType}`;
+    
+    if (properties[propertyName] !== undefined) {
+        return properties[propertyName];
+    }
+    
+    // Fallback to average if specific method not available
+    const avgPropertyName = `avg_${dataType}`;
+    if (properties[avgPropertyName] !== undefined) {
+        return properties[avgPropertyName];
+    }
+    
+    // Final fallback
+    return properties[dataType] || 0;
+}
+
+function getFeatureLabel(properties) {
+    const level = properties.level || currentGeographicLevel;
+    const id = properties.id;
+    
+    switch (level) {
+        case 'region':
+            return `Region: ${id}`;
+        case 'state_region':
+            return `State Region: ${id}`;
+        case 'state':
+            return `State: ${id}`;
+        case 'zipcode':
+            return `ZIP: ${id}`;
+        case 'h3':
+            return `H3: ${id}`;
+        default:
+            return `${level}: ${id}`;
+    }
+}
+
+function getColorForValue(value, dataType) {
+    if (!timeSeriesData || !timeSeriesData.features) {
+        return '#cccccc';
+    }
+    
+    // Collect all values for scaling
+    const allValues = [];
+    timeSeriesData.features.forEach(feature => {
+        const val = getStatisticalValue(feature.properties, dataType, currentStatisticalMethod);
+        if (val && val > 0) {
+            allValues.push(val);
+        }
+    });
+    
+    if (allValues.length === 0) {
+        return '#cccccc';
+    }
+    
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+    const normalized = (value - minValue) / (maxValue - minValue);
+    
+    // Enhanced color scale
+    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
+    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
+    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
+    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
+    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
+}
+
+function updateColorLegend() {
+    const legendContent = document.getElementById('legend-content');
+    if (!legendContent) return;
+    
+    const legendItems = [
+        { label: 'Low', color: 'hsl(240, 70%, 50%)' },
+        { label: 'Medium-Low', color: 'hsl(180, 70%, 60%)' },
+        { label: 'Medium', color: 'hsl(120, 70%, 60%)' },
+        { label: 'Medium-High', color: 'hsl(60, 70%, 60%)' },
+        { label: 'High', color: 'hsl(30, 70%, 60%)' }
+    ];
+    
+    legendContent.innerHTML = legendItems.map(item => `
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: ${item.color}"></div>
+            <span>${item.label}</span>
+        </div>
+    `).join('');
+}
+
+function getCurrentDate() {
+    const slider = document.getElementById('time-slider');
+    const maxValue = parseInt(slider.max);
+    const currentValue = parseInt(slider.value);
+    
+    // Map slider value to date (simplified)
+    const dates = ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'];
+    const index = Math.floor((currentValue / maxValue) * (dates.length - 1));
+    return dates[index] || dates[dates.length - 1];
+}
+
+function setupEventListeners() {
+    // Time slider
+    const timeSlider = document.getElementById('time-slider');
+    const timeDisplay = document.getElementById('time-display');
+    
+    timeSlider.addEventListener('input', (e) => {
+        const date = getCurrentDate();
+        timeDisplay.textContent = date;
+        updateMapData();
+    });
+}
+
+function togglePlayPause() {
+    const btn = document.getElementById('play-pause-btn');
+    
+    if (isPlaying) {
+        clearInterval(playInterval);
+        btn.textContent = '▶️ Play';
+        isPlaying = false;
+    } else {
+        const slider = document.getElementById('time-slider');
+        let currentValue = parseInt(slider.value);
+        const maxValue = parseInt(slider.max);
         
-        // Display data table
-        displayDataTable(zipData.slice(0, 50));
+        playInterval = setInterval(() => {
+            currentValue = (currentValue + 1) % (maxValue + 1);
+            slider.value = currentValue;
+            slider.dispatchEvent(new Event('input'));
+        }, 1000);
         
-        // Update footer with Zillow data date
-        updateFooter(zipData);
+        btn.textContent = '⏸️ Pause';
+        isPlaying = true;
+    }
+}
+
+function exportData() {
+    if (!timeSeriesData) {
+        alert('No data available to export');
+        return;
+    }
+    
+    const dataStr = JSON.stringify(timeSeriesData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `zillow_data_${currentGeographicLevel}_${currentStatisticalMethod}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+}
+
+function initializeDrawingTools() {
+    // Initialize Leaflet.draw
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    
+    const drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            polygon: true,
+            polyline: false,
+            rectangle: true,
+            circle: true,
+            marker: false
+        }
+    });
+    
+    map.addControl(drawControl);
+    
+    // Handle drawing events
+    map.on(L.Draw.Event.CREATED, function(event) {
+        const layer = event.layer;
+        drawnItems.addLayer(layer);
+        console.log('✏️ Shape drawn:', layer);
+    });
+}
+
+function toggleDrawing() {
+    // This would toggle the drawing tools visibility
+    console.log('✏️ Toggle drawing tools');
+}
+
+function clearMap() {
+    if (currentLayer) {
+        map.removeLayer(currentLayer);
+        currentLayer = null;
+    }
+    console.log('🗑️ Map cleared');
+}
+
+// Legacy functions for Overview page compatibility
+async function loadData() {
+    try {
+        console.log('📊 Loading data for overview...');
+        const response = await fetch('./data_demo/zip_latest.geojson?v=' + Date.now());
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || (!contentType.includes('application/json') && !contentType.includes('application/geo+json'))) {
+            throw new Error(`Expected JSON but got: ${contentType}`);
+        }
+        
+        const data = await response.json();
+        console.log(`✅ Loaded ${data.features.length} ZIP codes`);
+        
+        displayStats(data);
+        createChart(data);
+        displayDataTable(data);
+        updateFooter();
         
     } catch (error) {
         console.error('❌ Error loading data:', error);
-        console.error('❌ Error details:', error.message);
-        document.getElementById('stats').innerHTML = `<p>❌ Error loading data: ${error.message}</p>`;
+        document.getElementById('stats').innerHTML = `
+            <div style="color: #d32f2f; padding: 20px; text-align: center;">
+                <h3>⚠️ Data Loading Error</h3>
+                <p>Could not load data. Please check the console for details.</p>
+                <p><strong>Error:</strong> ${error.message}</p>
+            </div>
+        `;
     }
 }
 
 function displayStats(data) {
-    const stats = document.getElementById('stats');
-    const totalZips = data.length;
-    const avgValue = data.reduce((sum, item) => sum + item.zhvi, 0) / totalZips;
-    const maxValue = Math.max(...data.map(item => item.zhvi));
-    const minValue = Math.min(...data.map(item => item.zhvi));
+    const statsDiv = document.getElementById('stats');
+    if (!statsDiv) return;
     
-    stats.innerHTML = `
+    const features = data.features;
+    const totalZips = features.length;
+    
+    const zhviValues = features.map(f => f.properties.zhvi).filter(v => v && !isNaN(v));
+    const zoriValues = features.map(f => f.properties.zori).filter(v => v && !isNaN(v));
+    
+    const avgZhvi = zhviValues.length > 0 ? zhviValues.reduce((a, b) => a + b, 0) / zhviValues.length : 0;
+    const avgZori = zoriValues.length > 0 ? zoriValues.reduce((a, b) => a + b, 0) / zoriValues.length : 0;
+    
+    statsDiv.innerHTML = `
         <div class="stat-item">
             <strong>Total ZIP Codes:</strong> ${totalZips.toLocaleString()}
         </div>
         <div class="stat-item">
-            <strong>Average Home Value:</strong> $${avgValue.toLocaleString()}
+            <strong>Average Home Value (ZHVI):</strong> $${Math.round(avgZhvi).toLocaleString()}
         </div>
         <div class="stat-item">
-            <strong>Highest Value:</strong> $${maxValue.toLocaleString()}
+            <strong>Average Rent Index (ZORI):</strong> $${Math.round(avgZori).toLocaleString()}
         </div>
         <div class="stat-item">
-            <strong>Lowest Value:</strong> $${minValue.toLocaleString()}
+            <strong>Data Points:</strong> ${zhviValues.length} home values, ${zoriValues.length} rent indices
         </div>
     `;
 }
 
 function createChart(data) {
-    const ctx = document.getElementById('chart').getContext('2d');
+    const canvas = document.getElementById('chart');
+    if (!canvas) return;
     
+    const features = data.features;
+    const topZips = features
+        .map(f => ({
+            zip: f.properties.zcta,
+            zhvi: f.properties.zhvi || 0
+        }))
+        .filter(f => f.zhvi > 0)
+        .sort((a, b) => b.zhvi - a.zhvi)
+        .slice(0, 20);
+    
+    const ctx = canvas.getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.map(item => item.zip),
+            labels: topZips.map(f => f.zip),
             datasets: [{
                 label: 'Home Value (ZHVI)',
-                data: data.map(item => item.zhvi),
+                data: topZips.map(f => f.zhvi),
                 backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Rent Index (ZORI)',
-                data: data.map(item => item.zori),
-                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1
             }]
         },
@@ -112,905 +589,54 @@ function createChart(data) {
                         }
                     }
                 }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
             }
         }
     });
 }
 
 function displayDataTable(data) {
-    const table = document.getElementById('data-table');
+    const tableDiv = document.getElementById('data-table');
+    if (!tableDiv) return;
     
-    let html = '<table><thead><tr><th>ZIP Code</th><th>Home Value</th><th>Rent Index</th><th>Date</th></tr></thead><tbody>';
+    const features = data.features.slice(0, 50); // Show first 50
     
-    data.forEach(item => {
-        html += `
-            <tr>
-                <td>${item.zip}</td>
-                <td>$${item.zhvi.toLocaleString()}</td>
-                <td>$${(item.zori || 0).toLocaleString()}</td>
-                <td>${item.date}</td>
-            </tr>
-        `;
-    });
+    const tableHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ZIP Code</th>
+                    <th>Home Value (ZHVI)</th>
+                    <th>Rent Index (ZORI)</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${features.map(f => `
+                    <tr>
+                        <td>${f.properties.zcta}</td>
+                        <td>$${(f.properties.zhvi || 0).toLocaleString()}</td>
+                        <td>$${(f.properties.zori || 0).toLocaleString()}</td>
+                        <td>${f.properties.date || 'N/A'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
     
-    html += '</tbody></table>';
-    table.innerHTML = html;
+    tableDiv.innerHTML = tableHTML;
 }
 
-function updateFooter(zipData) {
-    // Get the latest date from the Zillow data
-    const latestDate = zipData.length > 0 ? zipData[0].date : 'Unknown';
+function updateFooter() {
+    const zillowDate = document.getElementById('zillow-date');
+    const serverDate = document.getElementById('server-date');
     
-    // Format the date nicely
-    const formattedDate = new Date(latestDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-    
-    // Update the footer
-    const zillowDateElement = document.getElementById('zillow-date');
-    if (zillowDateElement) {
-        zillowDateElement.textContent = formattedDate;
+    if (zillowDate) {
+        zillowDate.textContent = new Date().toLocaleDateString();
     }
-}
-
-// Page switching functionality
-function switchPage(pageName) {
-    // Hide all pages
-    document.querySelectorAll('.page-content').forEach(page => {
-        page.style.display = 'none';
-    });
-    
-    // Remove active class from all buttons
-    document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected page
-    document.getElementById(pageName + '-page').style.display = 'block';
-    
-    // Add active class to clicked button
-    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-    
-    console.log(`📄 Switched to ${pageName} page`);
-}
-
-// Initialize page switching
-function initializePageSwitching() {
-    // Add click listeners to page buttons
-    document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const pageName = this.getAttribute('data-page');
-            switchPage(pageName);
-        });
-    });
-    
-    console.log('✅ Page switching initialized');
-}
-
-// Map and Time Series functionality
-let map = null;
-let timeSeriesData = null;
-let currentLayer = null;
-let isPlaying = false;
-let playInterval = null;
-let drawnItems = null;
-let isDrawing = false;
-let currentZoomLevel = 4;
-let dataCache = {
-    states: null,
-    counties: null,
-    zipcodes: null
-};
-
-// Initialize map when Time Series page is shown
-function initializeMap() {
-    if (map) return; // Already initialized
-    
-    console.log('🗺️ Initializing map...');
-    
-    // Create map centered on US
-    map = L.map('map').setView([39.8283, -98.5795], 4);
-    
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    
-    // Initialize drawing layer
-    drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-    
-    // Add zoom level detection
-    map.on('zoomend', function() {
-        const newZoom = map.getZoom();
-        if (Math.abs(newZoom - currentZoomLevel) >= 1) {
-            currentZoomLevel = newZoom;
-            console.log(`🔍 Zoom level changed to: ${currentZoomLevel}`);
-            updateMapData(); // Reload data at appropriate detail level
-        }
-    });
-    
-    console.log('✅ Map initialized');
-}
-
-// Load time series data with progressive detail
-async function loadTimeSeriesData() {
-    try {
-        console.log('📊 Loading time series data...');
-        
-        // Load initial state-level data (fast)
-        await loadStateLevelData();
-        
-        console.log(`✅ Loaded state-level data`);
-        
-        // Initialize time slider
-        initializeTimeSlider();
-        
-        // Load initial map data
-        console.log('🔄 Calling updateMapData...');
-        await updateMapData();
-        console.log('✅ updateMapData completed');
-        
-    } catch (error) {
-        console.error('❌ Error loading time series data:', error);
+    if (serverDate) {
+        serverDate.textContent = new Date().toLocaleString();
     }
 }
 
-// Load state-level aggregated data
-async function loadStateLevelData() {
-    try {
-        console.log('🔄 Loading ZIP code data for aggregation...');
-        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
-        const data = await response.json();
-        
-        console.log(`📊 Loaded ${data.features.length} ZIP codes for aggregation`);
-        
-        // Take a sample of ZIP codes for performance (first 1000)
-        const sampleFeatures = data.features.slice(0, 1000);
-        
-        // Aggregate ZIP codes by state (simplified - using first 2 digits of ZIP as state proxy)
-        const stateData = {};
-        
-        sampleFeatures.forEach(feature => {
-            const zip = feature.properties.zcta;
-            if (!zip) return;
-            
-            // Convert to string and get first 2 digits for state grouping
-            const zipStr = zip.toString();
-            if (zipStr.length < 2) return;
-            
-            const stateCode = zipStr.substring(0, 2); // Simplified state grouping
-            
-            if (!stateData[stateCode]) {
-                stateData[stateCode] = {
-                    zips: [],
-                    totalZhvi: 0,
-                    totalZori: 0,
-                    count: 0,
-                    lats: [],
-                    lons: []
-                };
-            }
-            
-            stateData[stateCode].zips.push(feature);
-            stateData[stateCode].totalZhvi += feature.properties.zhvi || 0;
-            stateData[stateCode].totalZori += feature.properties.zori || 0;
-            stateData[stateCode].count++;
-            
-            // Collect coordinates for center calculation
-            if (feature.geometry && feature.geometry.coordinates) {
-                // For Point geometry: coordinates are [lon, lat]
-                // For Polygon geometry: coordinates are [[[lon, lat], ...]]
-                let lat, lon;
-                if (feature.geometry.type === 'Point') {
-                    lon = feature.geometry.coordinates[0];
-                    lat = feature.geometry.coordinates[1];
-                } else if (feature.geometry.type === 'Polygon') {
-                    // Use first coordinate of the polygon
-                    lon = feature.geometry.coordinates[0][0][0];
-                    lat = feature.geometry.coordinates[0][0][1];
-                }
-                
-                if (lat && lon) {
-                    stateData[stateCode].lats.push(lat);
-                    stateData[stateCode].lons.push(lon);
-                }
-            }
-        });
-        
-        console.log(`📊 Aggregated into ${Object.keys(stateData).length} state regions`);
-        console.log('📊 State codes found:', Object.keys(stateData));
-        console.log('📊 Sample state data:', Object.entries(stateData).slice(0, 3));
-        
-        // Create state-level features
-        const stateFeatures = Object.entries(stateData).map(([stateCode, data]) => {
-            const avgZhvi = data.totalZhvi / data.count;
-            const avgZori = data.totalZori / data.count;
-            
-            // Calculate center from actual coordinates
-            const avgLat = data.lats.length > 0 ? data.lats.reduce((sum, lat) => sum + lat, 0) / data.lats.length : 39.8283;
-            const avgLon = data.lons.length > 0 ? data.lons.reduce((sum, lon) => sum + lon, 0) / data.lons.length : -98.5795;
-            
-            return {
-                type: 'Feature',
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [[
-                        [avgLon - 1, avgLat - 0.5],
-                        [avgLon + 1, avgLat - 0.5],
-                        [avgLon + 1, avgLat + 0.5],
-                        [avgLon - 1, avgLat + 0.5],
-                        [avgLon - 1, avgLat - 0.5]
-                    ]]
-                },
-                properties: {
-                    stateCode: stateCode,
-                    avgZhvi: avgZhvi,
-                    avgZori: avgZori,
-                    zipCount: data.count,
-                    timeValues: {
-                        '2024-01': { zhvi: avgZhvi * 0.95, zori: avgZori * 0.95 },
-                        '2024-02': { zhvi: avgZhvi * 0.97, zori: avgZori * 0.97 },
-                        '2024-03': { zhvi: avgZhvi * 0.99, zori: avgZori * 0.99 },
-                        '2024-04': { zhvi: avgZhvi * 1.01, zori: avgZori * 1.01 },
-                        '2024-05': { zhvi: avgZhvi * 1.03, zori: avgZori * 1.03 },
-                        '2024-06': { zhvi: avgZhvi, zori: avgZori }
-                    }
-                }
-            };
-        });
-        
-        console.log(`🎨 Created ${stateFeatures.length} state features`);
-        
-        // Cache state data
-        dataCache.states = {
-            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-            features: stateFeatures
-        };
-        
-        timeSeriesData = dataCache.states;
-        
-        console.log('✅ State-level data loaded successfully');
-        
-    } catch (error) {
-        console.error('❌ Error loading state data:', error);
-        // Create fallback data with multiple regions
-        timeSeriesData = {
-            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Polygon',
-                        coordinates: [[
-                            [-100, 35],
-                            [-90, 35],
-                            [-90, 45],
-                            [-100, 45],
-                            [-100, 35]
-                        ]]
-                    },
-                    properties: {
-                        stateCode: 'US1',
-                        avgZhvi: 300000,
-                        avgZori: 2000,
-                        zipCount: 500,
-                        timeValues: {
-                            '2024-01': { zhvi: 285000, zori: 1900 },
-                            '2024-02': { zhvi: 291000, zori: 1940 },
-                            '2024-03': { zhvi: 297000, zori: 1980 },
-                            '2024-04': { zhvi: 303000, zori: 2020 },
-                            '2024-05': { zhvi: 309000, zori: 2060 },
-                            '2024-06': { zhvi: 300000, zori: 2000 }
-                        }
-                    }
-                },
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Polygon',
-                        coordinates: [[
-                            [-80, 25],
-                            [-70, 25],
-                            [-70, 35],
-                            [-80, 35],
-                            [-80, 25]
-                        ]]
-                    },
-                    properties: {
-                        stateCode: 'US2',
-                        avgZhvi: 450000,
-                        avgZori: 2500,
-                        zipCount: 300,
-                        timeValues: {
-                            '2024-01': { zhvi: 427500, zori: 2375 },
-                            '2024-02': { zhvi: 436500, zori: 2425 },
-                            '2024-03': { zhvi: 445500, zori: 2475 },
-                            '2024-04': { zhvi: 454500, zori: 2525 },
-                            '2024-05': { zhvi: 463500, zori: 2575 },
-                            '2024-06': { zhvi: 450000, zori: 2500 }
-                        }
-                    }
-                }
-            ]
-        };
-        console.log('🔄 Using fallback data');
-    }
-}
-
-// Load detailed data based on zoom level
-async function loadDetailedData() {
-    const zoom = map.getZoom();
-    
-    if (zoom >= 8 && !dataCache.zipcodes) {
-        console.log('🔍 Loading detailed ZIP code data...');
-        try {
-            const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
-            const data = await response.json();
-            
-            // Take a much smaller sample for performance
-            const sampleFeatures = data.features.slice(0, 200); // Only 200 features max
-            
-            dataCache.zipcodes = {
-                dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
-                features: sampleFeatures.map(feature => ({
-                    ...feature,
-                    timeValues: {
-                        '2024-01': { zhvi: feature.properties.zhvi * 0.95, zori: (feature.properties.zori || 0) * 0.95 },
-                        '2024-02': { zhvi: feature.properties.zhvi * 0.97, zori: (feature.properties.zori || 0) * 0.97 },
-                        '2024-03': { zhvi: feature.properties.zhvi * 0.99, zori: (feature.properties.zori || 0) * 0.99 },
-                        '2024-04': { zhvi: feature.properties.zhvi * 1.01, zori: (feature.properties.zori || 0) * 1.01 },
-                        '2024-05': { zhvi: feature.properties.zhvi * 1.03, zori: (feature.properties.zori || 0) * 1.03 },
-                        '2024-06': { zhvi: feature.properties.zhvi, zori: feature.properties.zori || 0 }
-                    }
-                }))
-            };
-            
-            console.log(`✅ Loaded ${sampleFeatures.length} detailed features`);
-        } catch (error) {
-            console.error('❌ Error loading detailed data:', error);
-        }
-    }
-}
-
-// Initialize time slider
-function initializeTimeSlider() {
-    const slider = document.getElementById('time-slider');
-    const display = document.getElementById('time-display');
-    
-    if (!slider || !display) return;
-    
-    slider.max = timeSeriesData.dates.length - 1;
-    slider.value = timeSeriesData.dates.length - 1; // Start at latest
-    
-    slider.addEventListener('input', function() {
-        const index = parseInt(this.value);
-        display.textContent = timeSeriesData.dates[index];
-        updateMapData();
-    });
-    
-    // Set initial display
-    display.textContent = timeSeriesData.dates[timeSeriesData.dates.length - 1];
-}
-
-// Update map data based on current time and settings
-async function updateMapData() {
-    console.log('🔄 updateMapData called');
-    
-    if (!map) {
-        console.error('❌ Map not initialized');
-        return;
-    }
-    
-    if (!timeSeriesData) {
-        console.error('❌ Time series data not loaded');
-        return;
-    }
-    
-    console.log('✅ Map and timeSeriesData available');
-    
-    const slider = document.getElementById('time-slider');
-    const dataType = document.getElementById('data-type').value;
-    const overlayType = document.getElementById('overlay-type').value;
-    
-    if (!slider) {
-        console.error('❌ Time slider not found');
-        return;
-    }
-    
-    const timeIndex = parseInt(slider.value);
-    const currentDate = timeSeriesData.dates[timeIndex];
-    
-    console.log(`📅 Updating map for ${currentDate}, ${dataType}, ${overlayType}, zoom: ${currentZoomLevel}`);
-    console.log(`📊 Time series data has ${timeSeriesData.features.length} features`);
-    
-    // Load detailed data if needed
-    await loadDetailedData();
-    
-    // Choose appropriate data source based on zoom level
-    let dataSource = timeSeriesData;
-    if (currentZoomLevel >= 8 && dataCache.zipcodes) {
-        dataSource = dataCache.zipcodes;
-        console.log('🔍 Using detailed ZIP code data');
-    } else {
-        console.log('🗺️ Using state-level data');
-    }
-    
-    console.log(`📊 Data source has ${dataSource.features.length} features`);
-    
-    // Clear existing layer
-    if (currentLayer) {
-        console.log('🗑️ Removing existing layer');
-        map.removeLayer(currentLayer);
-    }
-    
-    // Create new layer based on overlay type and zoom level
-    console.log(`🎨 Creating ${overlayType} layer...`);
-    if (overlayType === 'zip') {
-        currentLayer = createZipLayer(currentDate, dataType, dataSource);
-    } else {
-        currentLayer = createH3Layer(currentDate, dataType, dataSource);
-    }
-    
-    if (currentLayer) {
-        console.log('✅ Layer created, adding to map');
-        map.addLayer(currentLayer);
-        console.log('✅ Layer added to map');
-    } else {
-        console.error('❌ Failed to create layer');
-    }
-    
-    // Update color legend
-    updateColorLegend();
-    console.log('✅ updateMapData completed');
-}
-
-// Create ZIP code layer
-function createZipLayer(date, dataType, dataSource = timeSeriesData) {
-    console.log(`🔍 Creating ZIP layer with ${dataSource.features.length} source features`);
-    console.log(`📅 Looking for date: ${date}`);
-    console.log(`📊 Data type: ${dataType}`);
-    
-    console.log(`🔍 Looking for date: ${date} in ${dataSource.features.length} features`);
-    
-    const features = dataSource.features
-        .map((feature, index) => {
-            const timeData = feature.timeValues?.[date] || feature.properties.timeValues?.[date];
-            if (!timeData) {
-                return null;
-            }
-            
-            const value = timeData[dataType] || 0;
-            
-            return {
-                type: 'Feature',
-                geometry: feature.geometry,
-                properties: {
-                    id: feature.properties.zcta || feature.properties.stateCode,
-                    value: value,
-                    date: date,
-                    zipCount: feature.properties.zipCount || 1,
-                    isState: !!feature.properties.stateCode
-                }
-            };
-        })
-        .filter(f => f !== null);
-    
-    console.log(`🎨 Rendering ${features.length} features`);
-    
-    if (features.length === 0) {
-        console.error('❌ No features to render!');
-        return null;
-    }
-    
-    // Collect styling info for consolidated logging
-    const stylingInfo = [];
-    
-    const layer = L.geoJSON(features, {
-        style: function(feature) {
-            const value = feature.properties.value;
-            const color = getColorForValue(value, dataType);
-            stylingInfo.push({ id: feature.properties.id, value: value, color: color });
-            
-            return {
-                fillColor: color,
-                weight: feature.properties.isState ? 2 : 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: feature.properties.isState ? '5' : '3',
-                fillOpacity: 0.7
-            };
-        },
-        onEachFeature: function(feature, layer) {
-            const props = feature.properties;
-            const label = props.isState ? `State Region: ${props.id}` : `ZIP: ${props.id}`;
-            const countInfo = props.zipCount > 1 ? `<br>ZIP Codes: ${props.zipCount}` : '';
-            
-            layer.bindPopup(`
-                <strong>${label}</strong><br>
-                ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
-                Date: ${props.date}${countInfo}
-            `);
-        }
-    });
-    
-    // Log consolidated styling information
-    console.log(`🎨 Styled ${stylingInfo.length} features:`, stylingInfo.slice(0, 5).map(info => 
-        `${info.id}: $${Math.round(info.value).toLocaleString()} → ${info.color}`
-    ).join(', ') + (stylingInfo.length > 5 ? ` ... and ${stylingInfo.length - 5} more` : ''));
-    
-    console.log('✅ Layer created successfully');
-    return layer;
-}
-
-// Create H3 layer
-function createH3Layer(date, dataType, dataSource = timeSeriesData) {
-    try {
-        // For now, use the same data source as ZIP codes
-        // In a real implementation, you'd have separate H3 data
-        const features = dataSource.features
-            .map(feature => {
-                const timeData = feature.timeValues?.[date];
-                if (!timeData) return null;
-                
-                return {
-                    type: 'Feature',
-                    geometry: feature.geometry,
-                    properties: {
-                        id: feature.properties.zcta || feature.properties.stateCode || 'hex',
-                        value: timeData[dataType] || 0,
-                        date: date,
-                        isState: !!feature.properties.stateCode
-                    }
-                };
-            })
-            .filter(f => f !== null);
-        
-        console.log(`🔷 Rendering ${features.length} H3 features`);
-        
-        return L.geoJSON(features, {
-            style: function(feature) {
-                const value = feature.properties.value;
-                const color = getColorForValue(value, dataType);
-                
-                return {
-                    fillColor: color,
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    fillOpacity: 0.8
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                const props = feature.properties;
-                const label = props.isState ? `State Region: ${props.id}` : `H3 Hex: ${props.id}`;
-                
-                layer.bindPopup(`
-                    <strong>${label}</strong><br>
-                    ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
-                    Date: ${props.date}
-                `);
-            }
-        });
-    } catch (error) {
-        console.error('Error creating H3 layer:', error);
-        return null;
-    }
-}
-
-// Load H3 data
-async function loadH3Data() {
-    try {
-        const response = await fetch('data_demo/grid_latest.geojson?v=' + Date.now());
-        const data = await response.json();
-        
-        // Simulate time series for H3 data
-        window.h3GridData = {
-            features: data.features.map(feature => ({
-                ...feature,
-                timeValues: {
-                    '2024-01': { zhvi: feature.properties.avg_zhvi * 0.95, zori: (feature.properties.avg_zori || 0) * 0.95 },
-                    '2024-02': { zhvi: feature.properties.avg_zhvi * 0.97, zori: (feature.properties.avg_zori || 0) * 0.97 },
-                    '2024-03': { zhvi: feature.properties.avg_zhvi * 0.99, zori: (feature.properties.avg_zori || 0) * 0.99 },
-                    '2024-04': { zhvi: feature.properties.avg_zhvi * 1.01, zori: (feature.properties.avg_zori || 0) * 1.01 },
-                    '2024-05': { zhvi: feature.properties.avg_zhvi * 1.03, zori: (feature.properties.avg_zori || 0) * 1.03 },
-                    '2024-06': { zhvi: feature.properties.avg_zhvi, zori: feature.properties.avg_zori || 0 }
-                }
-            }))
-        };
-        
-        console.log('✅ H3 data loaded');
-    } catch (error) {
-        console.error('❌ Error loading H3 data:', error);
-    }
-}
-
-// Get color for value based on data type
-function getColorForValue(value, dataType) {
-    // Get current data range for better scaling
-    const allValues = [];
-    
-    if (timeSeriesData) {
-        timeSeriesData.features.forEach(feature => {
-            Object.values(feature.properties.timeValues || {}).forEach(timeData => {
-                if (timeData[dataType]) {
-                    allValues.push(timeData[dataType]);
-                }
-            });
-        });
-    }
-    
-    if (allValues.length === 0) {
-        return '#cccccc';
-    }
-    
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-    const normalized = (value - minValue) / (maxValue - minValue);
-    
-    // Enhanced color scale: blue (low) -> green -> yellow -> orange -> red (high)
-    if (normalized < 0.2) return `hsl(240, 70%, ${50 + normalized * 20}%)`; // Blue
-    if (normalized < 0.4) return `hsl(${240 - (normalized - 0.2) * 300}, 70%, 60%)`; // Blue to Green
-    if (normalized < 0.6) return `hsl(${120 - (normalized - 0.4) * 60}, 70%, 60%)`; // Green to Yellow
-    if (normalized < 0.8) return `hsl(${60 - (normalized - 0.6) * 30}, 70%, 60%)`; // Yellow to Orange
-    return `hsl(${30 - (normalized - 0.8) * 30}, 70%, 60%)`; // Orange to Red
-}
-
-// Update color legend
-function updateColorLegend() {
-    const legendContent = document.getElementById('legend-content');
-    const dataType = document.getElementById('data-type').value;
-    
-    if (!legendContent) return;
-    
-    const maxValue = dataType === 'zhvi' ? 2000000 : 5000;
-    const steps = 5;
-    
-    let html = '';
-    for (let i = 0; i < steps; i++) {
-        const value = (maxValue / steps) * (steps - i);
-        const color = getColorForValue(value, dataType);
-        
-        html += `
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: ${color}"></div>
-                <span>$${value.toLocaleString()}</span>
-            </div>
-        `;
-    }
-    
-    legendContent.innerHTML = html;
-}
-
-// Initialize Time Series page
-function initializeTimeSeriesPage() {
-    console.log('📈 Initializing Time Series page...');
-    
-    // Initialize map
-    initializeMap();
-    
-    // Load time series data
-    loadTimeSeriesData();
-    
-    // Add event listeners for controls
-    document.getElementById('data-type').addEventListener('change', updateMapData);
-    document.getElementById('overlay-type').addEventListener('change', updateMapData);
-    
-    // Play/pause button
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', function() {
-            if (isPlaying) {
-                pauseAnimation();
-            } else {
-                playAnimation();
-            }
-        });
-    }
-    
-    // Export button
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportMapData);
-    }
-    
-    // Draw button
-    const drawBtn = document.getElementById('draw-btn');
-    if (drawBtn) {
-        drawBtn.addEventListener('click', toggleDrawing);
-    }
-    
-    // Clear button
-    const clearBtn = document.getElementById('clear-btn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearDrawings);
-    }
-    
-    console.log('✅ Time Series page initialized');
-}
-
-// Play animation
-function playAnimation() {
-    if (!timeSeriesData) return;
-    
-    isPlaying = true;
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    if (playPauseBtn) playPauseBtn.textContent = '⏸️ Pause';
-    
-    const slider = document.getElementById('time-slider');
-    let currentIndex = parseInt(slider.value);
-    
-    playInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % timeSeriesData.dates.length;
-        slider.value = currentIndex;
-        slider.dispatchEvent(new Event('input'));
-        
-        if (currentIndex === timeSeriesData.dates.length - 1) {
-            pauseAnimation();
-        }
-    }, 1000); // 1 second per frame
-}
-
-// Pause animation
-function pauseAnimation() {
-    isPlaying = false;
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    if (playPauseBtn) playPauseBtn.textContent = '▶️ Play';
-    
-    if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = null;
-    }
-}
-
-// Enhanced page switching to initialize Time Series
-function switchPage(pageName) {
-    // Hide all pages
-    document.querySelectorAll('.page-content').forEach(page => {
-        page.style.display = 'none';
-    });
-    
-    // Remove active class from all buttons
-    document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected page
-    document.getElementById(pageName + '-page').style.display = 'block';
-    
-    // Add active class to clicked button
-    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-    
-    // Initialize Time Series page if switching to it
-    if (pageName === 'timeseries') {
-        setTimeout(() => {
-            initializeTimeSeriesPage();
-        }, 100); // Small delay to ensure DOM is ready
-    }
-    
-    console.log(`📄 Switched to ${pageName} page`);
-}
-
-// Export map data
-function exportMapData() {
-    if (!timeSeriesData || !currentLayer) {
-        alert('No data to export. Please load the map first.');
-        return;
-    }
-    
-    const slider = document.getElementById('time-slider');
-    const dataType = document.getElementById('data-type').value;
-    const overlayType = document.getElementById('overlay-type').value;
-    
-    const timeIndex = parseInt(slider.value);
-    const currentDate = timeSeriesData.dates[timeIndex];
-    
-    // Get current layer data
-    const layerData = currentLayer.toGeoJSON();
-    
-    // Create export data
-    const exportData = {
-        metadata: {
-            date: currentDate,
-            dataType: dataType,
-            overlayType: overlayType,
-            exportTime: new Date().toISOString(),
-            totalFeatures: layerData.features.length
-        },
-        data: layerData
-    };
-    
-    // Create and download JSON file
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `zillow-export-${currentDate}-${dataType}-${overlayType}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    console.log('📊 Data exported successfully');
-}
-
-// Toggle drawing mode
-function toggleDrawing() {
-    const drawBtn = document.getElementById('draw-btn');
-    
-    if (isDrawing) {
-        // Disable drawing
-        isDrawing = false;
-        drawBtn.textContent = '✏️ Draw';
-        drawBtn.style.backgroundColor = '#007bff';
-        
-        // Remove drawing tools
-        if (map.drawControl) {
-            map.removeControl(map.drawControl);
-        }
-        
-        console.log('✏️ Drawing mode disabled');
-    } else {
-        // Enable drawing
-        isDrawing = true;
-        drawBtn.textContent = '✏️ Drawing...';
-        drawBtn.style.backgroundColor = '#28a745';
-        
-        // Add drawing tools
-        if (!map.drawControl) {
-            map.drawControl = new L.Control.Draw({
-                edit: {
-                    featureGroup: drawnItems,
-                    remove: true
-                },
-                draw: {
-                    polygon: true,
-                    polyline: true,
-                    rectangle: true,
-                    circle: true,
-                    marker: true,
-                    circlemarker: false
-                }
-            });
-        }
-        
-        map.addControl(map.drawControl);
-        
-        // Handle drawing events
-        map.on(L.Draw.Event.CREATED, function(event) {
-            const layer = event.layer;
-            drawnItems.addLayer(layer);
-            console.log('✏️ Drawing created:', layer);
-        });
-        
-        console.log('✏️ Drawing mode enabled');
-    }
-}
-
-// Clear all drawings
-function clearDrawings() {
-    if (drawnItems) {
-        drawnItems.clearLayers();
-        console.log('🗑️ All drawings cleared');
-    }
-}
-
-
-// Load data when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadData();
-    initializePageSwitching();
-});
+// Load data for overview page
+loadData();
