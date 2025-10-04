@@ -29,6 +29,9 @@ async function loadData() {
         // Display data table
         displayDataTable(zipData.slice(0, 50));
         
+        // Update footer with Zillow data date
+        updateFooter(zipData);
+        
     } catch (error) {
         console.error('❌ Error loading data:', error);
         console.error('❌ Error details:', error.message);
@@ -123,6 +126,24 @@ function displayDataTable(data) {
     
     html += '</tbody></table>';
     table.innerHTML = html;
+}
+
+function updateFooter(zipData) {
+    // Get the latest date from the Zillow data
+    const latestDate = zipData.length > 0 ? zipData[0].date : 'Unknown';
+    
+    // Format the date nicely
+    const formattedDate = new Date(latestDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+    
+    // Update the footer
+    const zillowDateElement = document.getElementById('zillow-date');
+    if (zillowDateElement) {
+        zillowDateElement.textContent = formattedDate;
+    }
 }
 
 // Load data when page loads
