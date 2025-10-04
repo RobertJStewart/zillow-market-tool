@@ -4,9 +4,16 @@ console.log('✅ Zillow Market Tool frontend loaded');
 async function loadData() {
     try {
         // Load the ZIP code data
+        console.log('🔄 Attempting to fetch data...');
         const response = await fetch('data_demo/zip_latest.geojson');
-        const data = await response.json();
+        console.log('📡 Response status:', response.status);
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 Data loaded:', data);
         console.log(`📊 Loaded ${data.features.length} ZIP codes`);
         
         // Extract and sort data by home value
