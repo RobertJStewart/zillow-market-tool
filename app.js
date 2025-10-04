@@ -316,6 +316,8 @@ async function loadStateLevelData() {
         });
         
         console.log(`📊 Aggregated into ${Object.keys(stateData).length} state regions`);
+        console.log('📊 State codes found:', Object.keys(stateData));
+        console.log('📊 Sample state data:', Object.entries(stateData).slice(0, 3));
         
         // Create state-level features
         const stateFeatures = Object.entries(stateData).map(([stateCode, data]) => {
