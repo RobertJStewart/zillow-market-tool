@@ -198,6 +198,304 @@ function initializePageSwitching() {
     console.log('✅ Page switching initialized');
 }
 
+// Map and Time Series functionality
+let map = null;
+let timeSeriesData = null;
+let currentLayer = null;
+let isPlaying = false;
+let playInterval = null;
+
+// Initialize map when Time Series page is shown
+function initializeMap() {
+    if (map) return; // Already initialized
+    
+    console.log('🗺️ Initializing map...');
+    
+    // Create map centered on US
+    map = L.map('map').setView([39.8283, -98.5795], 4);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    console.log('✅ Map initialized');
+}
+
+// Load time series data
+async function loadTimeSeriesData() {
+    try {
+        console.log('📊 Loading time series data...');
+        
+        // For now, we'll use the existing data and simulate time series
+        // In a real implementation, you'd load data with multiple time periods
+        const response = await fetch('data_demo/zip_latest.geojson?v=' + Date.now());
+        const data = await response.json();
+        
+        // Simulate time series by creating multiple versions of the data
+        // with slightly different values for demonstration
+        timeSeriesData = {
+            dates: ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06'],
+            features: data.features.map(feature => ({
+                ...feature,
+                timeValues: {
+                    '2024-01': { zhvi: feature.properties.zhvi * 0.95, zori: (feature.properties.zori || 0) * 0.95 },
+                    '2024-02': { zhvi: feature.properties.zhvi * 0.97, zori: (feature.properties.zori || 0) * 0.97 },
+                    '2024-03': { zhvi: feature.properties.zhvi * 0.99, zori: (feature.properties.zori || 0) * 0.99 },
+                    '2024-04': { zhvi: feature.properties.zhvi * 1.01, zori: (feature.properties.zori || 0) * 1.01 },
+                    '2024-05': { zhvi: feature.properties.zhvi * 1.03, zori: (feature.properties.zori || 0) * 1.03 },
+                    '2024-06': { zhvi: feature.properties.zhvi, zori: feature.properties.zori || 0 }
+                }
+            }))
+        };
+        
+        console.log(`✅ Loaded time series data with ${timeSeriesData.dates.length} time periods`);
+        
+        // Initialize time slider
+        initializeTimeSlider();
+        
+        // Load initial map data
+        updateMapData();
+        
+    } catch (error) {
+        console.error('❌ Error loading time series data:', error);
+    }
+}
+
+// Initialize time slider
+function initializeTimeSlider() {
+    const slider = document.getElementById('time-slider');
+    const display = document.getElementById('time-display');
+    
+    if (!slider || !display) return;
+    
+    slider.max = timeSeriesData.dates.length - 1;
+    slider.value = timeSeriesData.dates.length - 1; // Start at latest
+    
+    slider.addEventListener('input', function() {
+        const index = parseInt(this.value);
+        display.textContent = timeSeriesData.dates[index];
+        updateMapData();
+    });
+    
+    // Set initial display
+    display.textContent = timeSeriesData.dates[timeSeriesData.dates.length - 1];
+}
+
+// Update map data based on current time and settings
+function updateMapData() {
+    if (!map || !timeSeriesData) return;
+    
+    const slider = document.getElementById('time-slider');
+    const dataType = document.getElementById('data-type').value;
+    const overlayType = document.getElementById('overlay-type').value;
+    
+    if (!slider) return;
+    
+    const timeIndex = parseInt(slider.value);
+    const currentDate = timeSeriesData.dates[timeIndex];
+    
+    console.log(`📅 Updating map for ${currentDate}, ${dataType}, ${overlayType}`);
+    
+    // Clear existing layer
+    if (currentLayer) {
+        map.removeLayer(currentLayer);
+    }
+    
+    // Create new layer based on overlay type
+    if (overlayType === 'zip') {
+        currentLayer = createZipLayer(currentDate, dataType);
+    } else {
+        currentLayer = createH3Layer(currentDate, dataType);
+    }
+    
+    if (currentLayer) {
+        map.addLayer(currentLayer);
+    }
+    
+    // Update color legend
+    updateColorLegend();
+}
+
+// Create ZIP code layer
+function createZipLayer(date, dataType) {
+    const features = timeSeriesData.features
+        .map(feature => {
+            const timeData = feature.timeValues[date];
+            if (!timeData) return null;
+            
+            return {
+                type: 'Feature',
+                geometry: feature.geometry,
+                properties: {
+                    zcta: feature.properties.zcta,
+                    value: timeData[dataType] || 0,
+                    date: date
+                }
+            };
+        })
+        .filter(f => f !== null);
+    
+    return L.geoJSON(features, {
+        style: function(feature) {
+            const value = feature.properties.value;
+            const color = getColorForValue(value, dataType);
+            
+            return {
+                fillColor: color,
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+            layer.bindPopup(`
+                <strong>ZIP: ${props.zcta}</strong><br>
+                ${dataType.toUpperCase()}: $${props.value.toLocaleString()}<br>
+                Date: ${props.date}
+            `);
+        }
+    });
+}
+
+// Create H3 layer (simplified for now)
+function createH3Layer(date, dataType) {
+    // For now, just show a message that H3 is not fully implemented
+    console.log('H3 layer not yet implemented');
+    return null;
+}
+
+// Get color for value based on data type
+function getColorForValue(value, dataType) {
+    // Simple color scale - in a real implementation, you'd want more sophisticated scaling
+    const maxValue = dataType === 'zhvi' ? 2000000 : 5000;
+    const normalized = Math.min(value / maxValue, 1);
+    
+    // Color scale from green (low) to red (high)
+    const hue = (1 - normalized) * 120; // 120 = green, 0 = red
+    return `hsl(${hue}, 70%, 50%)`;
+}
+
+// Update color legend
+function updateColorLegend() {
+    const legendContent = document.getElementById('legend-content');
+    const dataType = document.getElementById('data-type').value;
+    
+    if (!legendContent) return;
+    
+    const maxValue = dataType === 'zhvi' ? 2000000 : 5000;
+    const steps = 5;
+    
+    let html = '';
+    for (let i = 0; i < steps; i++) {
+        const value = (maxValue / steps) * (steps - i);
+        const color = getColorForValue(value, dataType);
+        
+        html += `
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: ${color}"></div>
+                <span>$${value.toLocaleString()}</span>
+            </div>
+        `;
+    }
+    
+    legendContent.innerHTML = html;
+}
+
+// Initialize Time Series page
+function initializeTimeSeriesPage() {
+    console.log('📈 Initializing Time Series page...');
+    
+    // Initialize map
+    initializeMap();
+    
+    // Load time series data
+    loadTimeSeriesData();
+    
+    // Add event listeners for controls
+    document.getElementById('data-type').addEventListener('change', updateMapData);
+    document.getElementById('overlay-type').addEventListener('change', updateMapData);
+    
+    // Play/pause button
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', function() {
+            if (isPlaying) {
+                pauseAnimation();
+            } else {
+                playAnimation();
+            }
+        });
+    }
+    
+    console.log('✅ Time Series page initialized');
+}
+
+// Play animation
+function playAnimation() {
+    if (!timeSeriesData) return;
+    
+    isPlaying = true;
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    if (playPauseBtn) playPauseBtn.textContent = '⏸️ Pause';
+    
+    const slider = document.getElementById('time-slider');
+    let currentIndex = parseInt(slider.value);
+    
+    playInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % timeSeriesData.dates.length;
+        slider.value = currentIndex;
+        slider.dispatchEvent(new Event('input'));
+        
+        if (currentIndex === timeSeriesData.dates.length - 1) {
+            pauseAnimation();
+        }
+    }, 1000); // 1 second per frame
+}
+
+// Pause animation
+function pauseAnimation() {
+    isPlaying = false;
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    if (playPauseBtn) playPauseBtn.textContent = '▶️ Play';
+    
+    if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+    }
+}
+
+// Enhanced page switching to initialize Time Series
+function switchPage(pageName) {
+    // Hide all pages
+    document.querySelectorAll('.page-content').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected page
+    document.getElementById(pageName + '-page').style.display = 'block';
+    
+    // Add active class to clicked button
+    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+    
+    // Initialize Time Series page if switching to it
+    if (pageName === 'timeseries') {
+        setTimeout(() => {
+            initializeTimeSeriesPage();
+        }, 100); // Small delay to ensure DOM is ready
+    }
+    
+    console.log(`📄 Switched to ${pageName} page`);
+}
+
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadData();

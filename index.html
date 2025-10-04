@@ -4,7 +4,9 @@
     <meta charset="utf-8"/>
     <title>Zillow Market Tool</title>
     <link href="style.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <h2>Zillow Market Tool (Demo)</h2>
@@ -39,11 +41,49 @@
     <div id="timeseries-page" class="page-content" style="display: none;">
         <div class="container">
             <h3>📈 Time Series Analysis</h3>
-            <p>Time series content will be added here...</p>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <div class="control-group">
+                    <label for="data-type">Data Type:</label>
+                    <select id="data-type">
+                        <option value="zhvi">Home Values (ZHVI)</option>
+                        <option value="zori">Rent Index (ZORI)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="overlay-type">Overlay:</label>
+                    <select id="overlay-type">
+                        <option value="zip">ZIP Codes</option>
+                        <option value="h3">H3 Hexagons</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <button id="play-pause-btn">▶️ Play</button>
+                </div>
+            </div>
+            
+            <!-- Time Slider -->
+            <div class="time-slider-container">
+                <label for="time-slider">Time Period:</label>
+                <input type="range" id="time-slider" min="0" max="100" value="100" class="time-slider">
+                <span id="time-display">Latest</span>
+            </div>
+            
+            <!-- Map Container -->
+            <div id="map" class="map-container"></div>
+            
+            <!-- Color Legend -->
+            <div id="color-legend" class="color-legend">
+                <h4>Value Range</h4>
+                <div id="legend-content"></div>
+            </div>
         </div>
     </div>
     
-    <script src="app.js?v=20250104-2"></script>
+    <script src="app.js?v=20250104-3"></script>
     
     <!-- Footer with data info -->
     <div id="footer-info" style="text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding: 10px; border-top: 1px solid #eee;">
