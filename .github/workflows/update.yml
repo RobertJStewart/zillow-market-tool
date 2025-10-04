@@ -1,8 +1,8 @@
 name: Update Zillow Data + Deploy
 on:
+  workflow_dispatch:   # 👈 allows manual/API triggers
   schedule:
     - cron: "0 12 15 * *"
-  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
