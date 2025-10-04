@@ -1,0 +1,33 @@
+{
+  "geographic_levels": {
+    "region": {
+      "zoom_threshold": 4,
+      "file": "data_demo/aggregated/regions.geojson"
+    },
+    "state_region": {
+      "zoom_threshold": 6,
+      "file": "data_demo/aggregated/state_regions.geojson"
+    },
+    "state": {
+      "zoom_threshold": 8,
+      "file": "data_demo/aggregated/states.geojson"
+    },
+    "zipcode": {
+      "zoom_threshold": 10,
+      "file": "data_demo/zip_latest.geojson"
+    }
+  },
+  "statistical_methods": [
+    "average",
+    "median",
+    "max",
+    "min",
+    "count"
+  ],
+  "data_files": {
+    "regions": "data_demo/aggregated/regions.geojson",
+    "state_regions": "data_demo/aggregated/state_regions.geojson",
+    "states": "data_demo/aggregated/states.geojson",
+    "zipcodes": "data_demo/zip_latest.geojson"
+  }
+}
